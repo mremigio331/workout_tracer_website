@@ -1,43 +1,62 @@
-import React, { createContext, useState, useEffect } from "react";
-import awsconfig from "../constants/aws-exports";
+import React, { createContext, useReducer, useEffect } from "react";
 import getStage from "../utility/getStage";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import AWS from "aws-sdk";
+import { COGNITO_CONSTANTS } from "../configs/cognitoConfig";
 
 export const UserContext = createContext();
 
+const initialState = {
+  user: null,
+  nickname: null,
+  email: null,
+  emailVerified: null,
+  name: null,
+  preferredUsername: null,
+  additionalAttributes: null,
+  isAuthenticated: null,
+  idToken: null,
+  accessToken: null,
+};
+
+const userReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_USER":
+      return {
+        ...state,
+        ...action.payload,
+        isAuthenticated: true,
+      };
+    case "SET_ADDITIONAL_ATTRIBUTES":
+      return {
+        ...state,
+        additionalAttributes: action.payload,
+        emailVerified: action.payload.email_verified,
+        name: action.payload.name,
+        preferredUsername: action.payload.preferred_username,
+      };
+    case "LOGOUT":
+      return { ...initialState, isAuthenticated: false };
+    default:
+      return state;
+  }
+};
+
 const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [nickname, setNickname] = useState(null);
-  const [email, setEmail] = useState(null);
-  const [emailVerified, setEmailVerified] = useState(null);
-  const [name, setName] = useState(null);
-  const [preferredUsername, setPreferredUsername] = useState(null);
-  const [additionalAttributes, setAdditionalAttributes] = useState({});
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [state, dispatch] = useReducer(userReducer, initialState);
 
   const stage = getStage();
+  const cognitoConfig = COGNITO_CONSTANTS[stage.toUpperCase()] || COGNITO_CONSTANTS.DEV;
 
-  const cognitoDomain =
-    stage === "prod"
-      ? process.env.PROD_REACT_APP_COGNITO_DOMAIN
-      : process.env.DEV_REACT_APP_COGNITO_DOMAIN;
-  const clientId =
-    stage === "prod"
-      ? process.env.PROD_REACT_APP_USER_POOL_WEB_CLIENT_ID
-      : process.env.DEV_REACT_APP_USER_POOL_WEB_CLIENT_ID;
-  const redirectUri =
-    stage === "prod"
-      ? "https://Workout Tracerbet.com/"
-      : "http://localhost:8080/";
-  const region = "us-west-2";
+  const cognitoDomain = cognitoConfig.domain;
+  const clientId = cognitoConfig.clientId;
+  const redirectUri = cognitoConfig.redirectUri;
+  const region = cognitoConfig.region;
   const responseType = "code"; // Authorization code flow
 
   if (!cognitoDomain || !clientId || !redirectUri || !region) {
-    throw new Error(
-      "Missing required environment variables for Cognito configuration",
-    );
+    throw new Error("Missing required Cognito configuration");
   }
 
   const constructHostedUIUrl = (path) => {
@@ -56,14 +75,7 @@ const UserProvider = ({ children }) => {
 
   const logoutUser = () => {
     const hostedLogoutUrl = `https://${cognitoDomain}.auth.${region}.amazoncognito.com/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(redirectUri)}`;
-    setUser(null);
-    setNickname(null);
-    setEmail(null);
-    setEmailVerified(null);
-    setName(null);
-    setPreferredUsername(null);
-    setAdditionalAttributes({});
-    setIsAuthenticated(false);
+    dispatch({ type: "LOGOUT" });
     Cookies.remove("idToken");
     Cookies.remove("accessToken");
     window.location.assign(hostedLogoutUrl);
@@ -99,39 +111,42 @@ const UserProvider = ({ children }) => {
         Cookies.set("idToken", data.id_token, {
           secure: true,
           sameSite: "Strict",
-          httpOnly: true,
         });
         Cookies.set("accessToken", data.access_token, {
           secure: true,
           sameSite: "Strict",
-          httpOnly: true,
         });
 
+        if (stage === "dev") {
+          console.log("idToken:", data.id_token);
+          console.log("accessToken:", data.access_token);
+        }
+
         const decodedToken = jwtDecode(data.id_token);
-        setUser(decodedToken);
-        setNickname(decodedToken.nickname);
-        setEmail(decodedToken.email);
-        setEmailVerified(decodedToken.email_verified);
-        setName(decodedToken.name);
-        setPreferredUsername(decodedToken.preferred_username);
-        setAdditionalAttributes(decodedToken);
-        setIsAuthenticated(true);
+        dispatch({
+          type: "SET_USER",
+          payload: {
+            user: decodedToken,
+            nickname: decodedToken.nickname,
+            email: decodedToken.email,
+            emailVerified: decodedToken.email_verified,
+            name: decodedToken.name,
+            preferredUsername: decodedToken.preferred_username,
+            additionalAttributes: decodedToken,
+            idToken: data.id_token,
+            accessToken: data.access_token,
+          },
+        });
       } catch (error) {
-        console.error("Error fetching user session:", error);
+        if (stage === "dev") {
+          console.error("Error fetching user session:", error);
+        }
       }
     }
   };
 
   const fetchAdditionalUserAttributes = async (accessToken) => {
-    AWS.config.update({
-      region: region,
-      credentials: new AWS.CognitoIdentityCredentials({
-        IdentityPoolId: awsconfig.Auth.identityPoolId,
-      }),
-    });
-
-    const cognitoIdentityServiceProvider =
-      new AWS.CognitoIdentityServiceProvider();
+    const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
 
     try {
       const userData = await cognitoIdentityServiceProvider
@@ -145,12 +160,11 @@ const UserProvider = ({ children }) => {
         return acc;
       }, {});
 
-      setAdditionalAttributes(attributes);
-      setEmailVerified(attributes.email_verified);
-      setName(attributes.name);
-      setPreferredUsername(attributes.preferred_username);
+      dispatch({ type: "SET_ADDITIONAL_ATTRIBUTES", payload: attributes });
     } catch (error) {
-      console.error("Error fetching additional user attributes:", error);
+      if (stage === "dev") {
+        console.error("Error fetching additional user attributes:", error);
+      }
     }
   };
 
@@ -159,14 +173,20 @@ const UserProvider = ({ children }) => {
     const accessToken = Cookies.get("accessToken");
     if (idToken && accessToken) {
       const decodedToken = jwtDecode(idToken);
-      setUser(decodedToken);
-      setNickname(decodedToken.nickname);
-      setEmail(decodedToken.email);
-      setEmailVerified(decodedToken.email_verified);
-      setName(decodedToken.name);
-      setPreferredUsername(decodedToken.preferred_username);
-      setAdditionalAttributes(decodedToken);
-      setIsAuthenticated(true);
+      dispatch({
+        type: "SET_USER",
+        payload: {
+          user: decodedToken,
+          nickname: decodedToken.nickname,
+          email: decodedToken.email,
+          emailVerified: decodedToken.email_verified,
+          name: decodedToken.name,
+          preferredUsername: decodedToken.preferred_username,
+          additionalAttributes: decodedToken,
+          idToken,
+          accessToken,
+        },
+      });
       fetchAdditionalUserAttributes(accessToken);
     }
   };
@@ -174,19 +194,13 @@ const UserProvider = ({ children }) => {
   useEffect(() => {
     loadUserSessionFromCookies();
     fetchUserSession();
+    // eslint-disable-next-line
   }, []);
 
   return (
     <UserContext.Provider
       value={{
-        user,
-        nickname,
-        email,
-        emailVerified,
-        name,
-        preferredUsername,
-        additionalAttributes,
-        isAuthenticated,
+        ...state,
         initiateSignIn,
         initiateSignUp,
         logoutUser,

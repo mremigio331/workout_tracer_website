@@ -1,20 +1,17 @@
+import {STAGING, PROD, DEV } from "../constants/stages";
+
 const getStage = () => {
   const domain = window.location.hostname.trim(); // Trim any leading/trailing spaces
-  console.log("Domain:", domain);
 
-  if (domain.includes("Workout Tracerbet.com")) {
-    console.log("Matched prod");
-    return "prod";
+  if (domain.includes("workouttracer.com")) {
+    return PROD;
   } else if (
-    domain.includes("dev.Workout Tracerbet.com") ||
-    domain.includes("localhost")
+    domain.includes("staging.workoutracer.com")
   ) {
-    console.log("Matched dev");
-    return "dev";
+    return STAGING;
   }
 
-  console.log("Matched unknown");
-  return "unknown";
+  return DEV;
 };
 
 export default getStage;
