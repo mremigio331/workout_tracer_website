@@ -1,6 +1,9 @@
 import React, { createContext, useReducer, useMemo, useContext } from "react";
 import getStage from "../utility/getApiEndpoint";
-import { PROD_API_ENDPOINT, STAGING_API_ENDPOINT } from "../constants/endpoints";
+import {
+  PROD_API_ENDPOINT,
+  STAGING_API_ENDPOINT,
+} from "../constants/endpoints";
 
 const endpointMap = {
   prod: PROD_API_ENDPOINT,
@@ -41,7 +44,7 @@ export const ApiProvider = ({ children }) => {
       stage: state.stage,
       setApiEndpoint: state.stage === "dev" ? setApiEndpoint : undefined,
     }),
-    [state.apiEndpoint, state.stage]
+    [state.apiEndpoint, state.stage],
   );
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;

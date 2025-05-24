@@ -9,8 +9,8 @@ const getApi = () => {
   const domain = window.location.hostname.trim();
 
   // Extract hostnames from endpoints
-  const prodHost = PROD_WEBSITE_ENDPOINT.replace(/^https?:\/\//, '');
-  const stagingHost = STAGING_WEBSITE_ENDPOINT.replace(/^https?:\/\//, '');
+  const prodHost = PROD_WEBSITE_ENDPOINT.replace(/^https?:\/\//, "");
+  const stagingHost = STAGING_WEBSITE_ENDPOINT.replace(/^https?:\/\//, "");
 
   if (domain.includes(prodHost)) {
     return PROD_API_ENDPOINT;

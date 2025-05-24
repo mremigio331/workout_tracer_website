@@ -47,7 +47,8 @@ const UserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   const stage = getStage();
-  const cognitoConfig = COGNITO_CONSTANTS[stage.toUpperCase()] || COGNITO_CONSTANTS.DEV;
+  const cognitoConfig =
+    COGNITO_CONSTANTS[stage.toUpperCase()] || COGNITO_CONSTANTS.DEV;
 
   const cognitoDomain = cognitoConfig.domain;
   const clientId = cognitoConfig.clientId;
@@ -146,7 +147,8 @@ const UserProvider = ({ children }) => {
   };
 
   const fetchAdditionalUserAttributes = async (accessToken) => {
-    const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider();
+    const cognitoIdentityServiceProvider =
+      new AWS.CognitoIdentityServiceProvider();
 
     try {
       const userData = await cognitoIdentityServiceProvider
