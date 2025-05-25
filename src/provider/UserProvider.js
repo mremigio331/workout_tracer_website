@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import AWS from "aws-sdk";
 import { COGNITO_CONSTANTS } from "../configs/cognitoConfig";
+import { DEV } from "../constants/stages";
 
 export const UserContext = createContext();
 
@@ -118,16 +119,20 @@ const UserProvider = ({ children }) => {
           sameSite: "Strict",
         });
 
-        if (stage === "dev") {
+        const decodedToken = jwtDecode(data.id_token);
+
+        if (stage === DEV) {
           console.log("idToken:", data.id_token);
           console.log("accessToken:", data.access_token);
+          console.log('data', decodedToken)
         }
 
-        const decodedToken = jwtDecode(data.id_token);
+        
         dispatch({
           type: "SET_USER",
           payload: {
             user: decodedToken,
+            user_id: decodedToken.sub,
             nickname: decodedToken.nickname,
             email: decodedToken.email,
             emailVerified: decodedToken.email_verified,
@@ -139,7 +144,7 @@ const UserProvider = ({ children }) => {
           },
         });
       } catch (error) {
-        if (stage === "dev") {
+        if (stage === DEV) {
           console.error("Error fetching user session:", error);
         }
       }
@@ -164,21 +169,31 @@ const UserProvider = ({ children }) => {
 
       dispatch({ type: "SET_ADDITIONAL_ATTRIBUTES", payload: attributes });
     } catch (error) {
-      if (stage === "dev") {
+      if (stage === DEV) {
         console.error("Error fetching additional user attributes:", error);
       }
+    }
+  };
+
+  const isTokenExpired = (token) => {
+    try {
+      const { exp } = jwtDecode(token); // use jwtDecode, not jwt_decode
+      return Date.now() >= exp * 1000;
+    } catch {
+      return true;
     }
   };
 
   const loadUserSessionFromCookies = () => {
     const idToken = Cookies.get("idToken");
     const accessToken = Cookies.get("accessToken");
-    if (idToken && accessToken) {
+    if (idToken && accessToken && !isTokenExpired(accessToken)) {
       const decodedToken = jwtDecode(idToken);
       dispatch({
         type: "SET_USER",
         payload: {
           user: decodedToken,
+          user_id: decodedToken.sub,
           nickname: decodedToken.nickname,
           email: decodedToken.email,
           emailVerified: decodedToken.email_verified,
@@ -190,6 +205,9 @@ const UserProvider = ({ children }) => {
         },
       });
       fetchAdditionalUserAttributes(accessToken);
+    } else {
+      Cookies.remove("idToken");
+      Cookies.remove("accessToken");
     }
   };
 

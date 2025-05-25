@@ -4,19 +4,15 @@ import { UserContext } from "../provider/UserProvider";
 import { apiRequestGet } from "../api/apiRequest";
 import { useApi } from "../provider/ApiProvider";
 
-const fetchUserProfile = async (apiEndpoint, accessToken) => {
-  return a;
-};
-
 export const useGetUserProfile = () => {
-  const { accessToken } = useContext(UserContext);
+  const { accessToken, user_id } = useContext(UserContext);
   const { apiEndpoint, stage } = useApi();
 
   const { data, isFetching, isError, status, error } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () =>
       apiRequestGet({
-        apiEndpoint: `${apiEndpoint}/user/profile`,
+        apiEndpoint: `${apiEndpoint}/user/profile?user_id=${user_id}`,
         accessToken,
       }),
     enabled: !!accessToken,
