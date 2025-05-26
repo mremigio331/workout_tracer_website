@@ -5,7 +5,7 @@ import { apiRequestGet } from "../api/apiRequest";
 import { useApi } from "../provider/ApiProvider";
 
 export const useGetUserProfile = () => {
-  const { accessToken, user_id } = useContext(UserContext);
+  const { idToken, user_id } = useContext(UserContext);
   const { apiEndpoint, stage } = useApi();
 
   const { data, isFetching, isError, status, error } = useQuery({
@@ -13,9 +13,9 @@ export const useGetUserProfile = () => {
     queryFn: () =>
       apiRequestGet({
         apiEndpoint: `${apiEndpoint}/user/profile?user_id=${user_id}`,
-        accessToken,
+        idToken,
       }),
-    enabled: !!accessToken,
+    enabled: !!idToken,
     select: (data) => ({
       status: "success",
       data,
