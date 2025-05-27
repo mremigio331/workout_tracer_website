@@ -8,8 +8,8 @@ const STAGING_REACT_APP_USER_POOL_WEB_CLIENT_ID = "1pabnebj1t1utd1c271amgks1g";
 const STAGING_REACT_APP_REGION = "us-west-2";
 const STAGING_REACT_APP_COGNITO_DOMAIN = "workouttracer-staging";
 
-const PROD_REACT_APP_USER_POOL_ID = "us-west-2_t4AiF79kf";
-const PROD_REACT_APP_USER_POOL_WEB_CLIENT_ID = "4gon63jino7gn4uhr37mg2qj45";
+const PROD_REACT_APP_USER_POOL_ID = "us-west-2_pIDMlzQGv";
+const PROD_REACT_APP_USER_POOL_WEB_CLIENT_ID = "3opfbbdntasbd9k9cpmches0u4";
 const PROD_REACT_APP_REGION = "us-west-2";
 const PROD_REACT_APP_COGNITO_DOMAIN = "workouttracer";
 
