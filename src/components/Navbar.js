@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Layout, Menu, Button, Avatar } from "antd";
 import { Link } from "react-router-dom";
-import { UserContext } from "../provider/UserProvider"; // Import UserContext
+import { UserContext } from "../provider/UserAuthenticationProvider"; // Import UserContext
 
 const { Header } = Layout;
 
@@ -42,6 +42,14 @@ const Navbar = () => {
           ),
           key: "user",
           children: [
+            {
+              label: (
+                <Link to="/user/profile" style={{ color: "white" }}>
+                  Profile
+                </Link>
+              ),
+              key: "profile",
+            },
             {
               label: (
                 <Button

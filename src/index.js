@@ -1,11 +1,12 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AWS from "aws-sdk";
-import App from "./App";
-import UserProvider from "./provider/UserProvider";
+import WorkoutTracer from "./WorkoutTracer";
+import UserAuthenticationProvider from "./provider/UserAuthenticationProvider";
 import ApiProvider from "./provider/ApiProvider";
+import { UserStravaProvider } from "./provider/UserStravaProvider";
+import { UserProfileProvider } from "./provider/UserProfileProvider";
 
 const queryClient = new QueryClient();
 
@@ -14,13 +15,15 @@ AWS.config.update({
 });
 
 createRoot(document.getElementById("app")).render(
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      <ApiProvider>
-        <UserProvider>
-          <App />
-        </UserProvider>
-      </ApiProvider>
-    </QueryClientProvider>
-  </BrowserRouter>,
+  <QueryClientProvider client={queryClient}>
+    <ApiProvider>
+      <UserAuthenticationProvider>
+        <UserProfileProvider>
+          <UserStravaProvider>
+            <WorkoutTracer />
+          </UserStravaProvider>
+        </UserProfileProvider>
+      </UserAuthenticationProvider>
+    </ApiProvider>
+  </QueryClientProvider>,
 );

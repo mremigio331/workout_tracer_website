@@ -7,19 +7,30 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
+    publicPath: "/", // ✅ This line is required for correct asset loading
+    clean: true,
+  },
+
+  devtool: "eval-source-map", // Better source maps for debugging
+  resolve: {
+    extensions: [".js", ".jsx"], // Allow omitting .js and .jsx in imports
   },
   devServer: {
     static: {
-      directory: path.join(__dirname, "dist"),
+      directory: path.resolve(__dirname, "public"), // ⬅️ Point to static assets folder, not dist
+      publicPath: "/",
     },
-    allowedHosts: ["all"],
+    historyApiFallback: true,
     compress: true,
     port: 8080,
+    hot: true,
+    open: true,
   },
+
   module: {
     rules: [
       {
-        test: /\.js|\.jsx$/,
+        test: /\.(js|jsx)$/, // Correct regex for JS/JSX files
         exclude: /node_modules/,
         use: {
           loader: "babel-loader",
@@ -37,8 +48,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebPackPlugin({
-      template: "./src/index.html", // Ensure template path is correct
-      filename: "./index.html",
+      template: path.resolve(__dirname, "src/index.html"),
+      filename: "index.html",
     }),
   ],
 };
