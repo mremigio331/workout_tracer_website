@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Button, Layout, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../../provider/UserProvider";
+import { UserContext } from "../../provider/UserAuthenticationProvider";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 

@@ -6,7 +6,7 @@ const { Content } = Layout;
 const { Title, Text } = Typography;
 import HomeAuthenticated from "./HomeAuthenticated";
 import HomeUnauthenticated from "./HomeUnauthenticated";
-import { UserContext } from "../../provider/UserProvider";
+import { UserContext } from "../../provider/UserAuthenticationProvider";
 
 const Home = () => {
   const navigate = useNavigate();
