@@ -2,20 +2,12 @@ import React, { createContext, useReducer, useEffect } from "react";
 import getStage from "../utility/getStage";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
-import AWS from "aws-sdk";
 import { COGNITO_CONSTANTS } from "../configs/cognitoConfig";
 import { DEV } from "../constants/stages";
 
 export const UserContext = createContext();
 
 const initialState = {
-  user: null,
-  nickname: null,
-  email: null,
-  emailVerified: null,
-  name: null,
-  preferredUsername: null,
-  additionalAttributes: null,
   isAuthenticated: null,
   idToken: null,
   accessToken: null,
@@ -23,19 +15,12 @@ const initialState = {
 
 const userReducer = (state, action) => {
   switch (action.type) {
-    case "SET_USER":
+    case "SET_AUTH":
       return {
         ...state,
-        ...action.payload,
         isAuthenticated: true,
-      };
-    case "SET_ADDITIONAL_ATTRIBUTES":
-      return {
-        ...state,
-        additionalAttributes: action.payload,
-        emailVerified: action.payload.email_verified,
-        name: action.payload.name,
-        preferredUsername: action.payload.preferred_username,
+        idToken: action.payload.idToken,
+        accessToken: action.payload.accessToken,
       };
     case "LOGOUT":
       return { ...initialState, isAuthenticated: false };
@@ -44,7 +29,7 @@ const userReducer = (state, action) => {
   }
 };
 
-const UserProvider = ({ children }) => {
+const UserAuthenticationProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   const stage = getStage();
@@ -55,7 +40,7 @@ const UserProvider = ({ children }) => {
   const clientId = cognitoConfig.clientId;
   const redirectUri = cognitoConfig.redirectUri;
   const region = cognitoConfig.region;
-  const responseType = "code"; // Authorization code flow
+  const responseType = "code";
 
   if (!cognitoDomain || !clientId || !redirectUri || !region) {
     throw new Error("Missing required Cognito configuration");
@@ -119,26 +104,14 @@ const UserProvider = ({ children }) => {
           sameSite: "Strict",
         });
 
-        const decodedToken = jwtDecode(data.id_token);
-
         if (stage === DEV) {
           console.log("idToken:", data.id_token);
           console.log("accessToken:", data.access_token);
-          console.log('data', decodedToken)
         }
 
-        
         dispatch({
-          type: "SET_USER",
+          type: "SET_AUTH",
           payload: {
-            user: decodedToken,
-            user_id: decodedToken.sub,
-            nickname: decodedToken.nickname,
-            email: decodedToken.email,
-            emailVerified: decodedToken.email_verified,
-            name: decodedToken.name,
-            preferredUsername: decodedToken.preferred_username,
-            additionalAttributes: decodedToken,
             idToken: data.id_token,
             accessToken: data.access_token,
           },
@@ -151,33 +124,9 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const fetchAdditionalUserAttributes = async (accessToken) => {
-    const cognitoIdentityServiceProvider =
-      new AWS.CognitoIdentityServiceProvider();
-
-    try {
-      const userData = await cognitoIdentityServiceProvider
-        .getUser({
-          AccessToken: accessToken,
-        })
-        .promise();
-
-      const attributes = userData.UserAttributes.reduce((acc, attribute) => {
-        acc[attribute.Name] = attribute.Value;
-        return acc;
-      }, {});
-
-      dispatch({ type: "SET_ADDITIONAL_ATTRIBUTES", payload: attributes });
-    } catch (error) {
-      if (stage === DEV) {
-        console.error("Error fetching additional user attributes:", error);
-      }
-    }
-  };
-
   const isTokenExpired = (token) => {
     try {
-      const { exp } = jwtDecode(token); // use jwtDecode, not jwt_decode
+      const { exp } = jwtDecode(token);
       return Date.now() >= exp * 1000;
     } catch {
       return true;
@@ -188,23 +137,13 @@ const UserProvider = ({ children }) => {
     const idToken = Cookies.get("idToken");
     const accessToken = Cookies.get("accessToken");
     if (idToken && accessToken && !isTokenExpired(accessToken)) {
-      const decodedToken = jwtDecode(idToken);
       dispatch({
-        type: "SET_USER",
+        type: "SET_AUTH",
         payload: {
-          user: decodedToken,
-          user_id: decodedToken.sub,
-          nickname: decodedToken.nickname,
-          email: decodedToken.email,
-          emailVerified: decodedToken.email_verified,
-          name: decodedToken.name,
-          preferredUsername: decodedToken.preferred_username,
-          additionalAttributes: decodedToken,
           idToken,
           accessToken,
         },
       });
-      fetchAdditionalUserAttributes(accessToken);
     } else {
       Cookies.remove("idToken");
       Cookies.remove("accessToken");
@@ -220,7 +159,9 @@ const UserProvider = ({ children }) => {
   return (
     <UserContext.Provider
       value={{
-        ...state,
+        isAuthenticated: state.isAuthenticated,
+        idToken: state.idToken,
+        accessToken: state.accessToken,
         initiateSignIn,
         initiateSignUp,
         logoutUser,
@@ -231,4 +172,4 @@ const UserProvider = ({ children }) => {
   );
 };
 
-export default UserProvider;
+export default UserAuthenticationProvider;

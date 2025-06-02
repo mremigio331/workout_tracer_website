@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { useContext } from "react";
-import { UserContext } from "../provider/UserProvider";
+import { UserContext } from "../provider/UserAuthenticationProvider";
 import { apiRequestGet } from "../api/apiRequest";
 import { useApi } from "../provider/ApiProvider";
 
-export const useGetUserProfile = () => {
-  const { idToken, user_id } = useContext(UserContext);
+const useGetUserProfile = () => {
+  const { idToken } = useContext(UserContext);
   const { apiEndpoint, stage } = useApi();
 
   const { data, isFetching, isError, status, error } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () =>
       apiRequestGet({
-        apiEndpoint: `${apiEndpoint}/user/profile?user_id=${user_id}`,
+        apiEndpoint: `${apiEndpoint}/user/profile`,
         idToken,
       }),
     enabled: !!idToken,
@@ -31,10 +31,12 @@ export const useGetUserProfile = () => {
   }
 
   return {
-    userProfile: data,
-    isFetching,
-    isError,
-    status,
-    error,
+    userProfile: data ? data.data.user_profile : {},
+    isUserFetching: isFetching,
+    isUserError: isError,
+    userStatus: status,
+    userError: error,
   };
 };
+
+export default useGetUserProfile;
