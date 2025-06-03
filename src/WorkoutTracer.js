@@ -32,7 +32,7 @@ const PageRoutes = () => {
   );
 };
 
-const App = () => {
+const WorkoutTracer = () => {
   const notifications = [];
 
   return (
@@ -60,4 +60,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default WorkoutTracer;

@@ -25,7 +25,7 @@ const Navbar = () => {
     {
       label: (
         <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-          Workout Tracer Bet
+          Workout Tracer
         </Link>
       ),
       key: "home",
