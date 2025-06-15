@@ -42,8 +42,19 @@ const userStravaReducer = (state, action) => {
 export const UserStravaProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userStravaReducer, initialState);
 
-  const { stravaProfile, isStravaFetching, isStravaError } =
-    useGetStravaProfile();
+  // Memoize hook values to avoid unnecessary rerenders
+  const {
+    stravaProfile: rawStravaProfile,
+    isStravaFetching: rawIsStravaFetching,
+    isStravaError: rawIsStravaError,
+  } = useGetStravaProfile();
+
+  const stravaProfile = useMemo(() => rawStravaProfile, [rawStravaProfile]);
+  const isStravaFetching = useMemo(
+    () => rawIsStravaFetching,
+    [rawIsStravaFetching],
+  );
+  const isStravaError = useMemo(() => rawIsStravaError, [rawIsStravaError]);
 
   console.log("Strava Profile Data:", stravaProfile);
   // Sync reducer state with hook values
@@ -56,7 +67,7 @@ export const UserStravaProvider = ({ children }) => {
       dispatch({ type: "FETCH_ERROR", payload: isStravaError });
     }
     // Only run when these values change
-  }, [stravaProfile, isStravaFetching, isStravaError, isStravaError]);
+  }, [stravaProfile, isStravaFetching, isStravaError]);
 
   const setAthlete = (stravaProfile) => {
     dispatch({ type: "FETCH_SUCCESS", payload: stravaProfile });

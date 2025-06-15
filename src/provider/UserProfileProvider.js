@@ -6,6 +6,8 @@ import React, {
   useEffect,
 } from "react";
 import useGetUserProfile from "../hooks/useGetUserProfile";
+import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
+import { useLocation } from "react-router-dom";
 
 const UserProfileContext = createContext();
 
@@ -38,19 +40,57 @@ const userProfileReducer = (state, action) => {
 export const UserProfileProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userProfileReducer, initialState);
 
-  const { userProfile, isUserFetching, isUserError } = useGetUserProfile();
+  const { idToken } = useContext(UserAuthenticationContext);
+  // Only use useLocation if inside a Router, otherwise fallback to a default value
+  let location = { pathname: "" };
+  try {
+    location = useLocation();
+  } catch (e) {
+    // Not in a Router context, fallback to default
+  }
 
-  console.log("User Profile Data:", userProfile);
+  const shouldFetchProfile =
+    !!idToken && typeof idToken === "string" && idToken.length > 0;
 
+  // Always call the hook (to follow React rules), but pass shouldFetchProfile to the hook
+  const {
+    userProfile: rawUserProfile,
+    isUserFetching: rawIsUserFetching,
+    isUserError: rawIsUserError,
+  } = useGetUserProfile(shouldFetchProfile);
+
+  // Refetch on route change or token change
   useEffect(() => {
-    if (isUserFetching) {
-      dispatch({ type: "FETCH_START" });
-    } else if (userProfile) {
-      dispatch({ type: "FETCH_SUCCESS", payload: userProfile });
-    } else if (isUserError) {
-      dispatch({ type: "FETCH_ERROR", payload: isUserError });
+    if (!shouldFetchProfile) {
+      if (
+        state.userProfile !== null ||
+        state.isUserFetching !== false ||
+        state.isUserError !== false
+      ) {
+        dispatch({ type: "CLEAR" });
+      }
+      return;
     }
-  }, [userProfile, isUserFetching, isUserError, isUserError]);
+    // Only dispatch if values have actually changed
+    if (rawIsUserFetching !== state.isUserFetching && rawIsUserFetching) {
+      dispatch({ type: "FETCH_START" });
+    } else if (
+      rawUserProfile &&
+      JSON.stringify(rawUserProfile) !== JSON.stringify(state.userProfile)
+    ) {
+      dispatch({ type: "FETCH_SUCCESS", payload: rawUserProfile });
+    } else if (rawIsUserError && rawIsUserError !== state.isUserError) {
+      dispatch({ type: "FETCH_ERROR", payload: rawIsUserError });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    shouldFetchProfile,
+    rawUserProfile,
+    rawIsUserFetching,
+    rawIsUserError,
+    location.pathname,
+  ]);
+  // Added location.pathname to dependencies
 
   const setUserProfile = (user) => {
     dispatch({ type: "FETCH_SUCCESS", payload: user });
@@ -70,6 +110,11 @@ export const UserProfileProvider = ({ children }) => {
     }),
     [state.userProfile, state.isUserFetching, state.isUserError],
   );
+
+  // Debug: log only when state changes
+  useEffect(() => {
+    console.log("User Profile Data:", state.userProfile);
+  }, [state.userProfile]);
 
   return (
     <UserProfileContext.Provider value={value}>

@@ -1,25 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { UserContext } from "../provider/UserAuthenticationProvider";
+import { useContext, useMemo } from "react";
+import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { apiRequestGet } from "../api/apiRequest";
 import { useApi } from "../provider/ApiProvider";
 
-const useGetUserProfile = () => {
-  const { idToken } = useContext(UserContext);
+const useGetUserProfile = (enabled = true) => {
+  const { idToken } = useContext(UserAuthenticationContext);
   const { apiEndpoint, stage } = useApi();
+
+  const isEnabled = useMemo(
+    () =>
+      enabled && !!idToken && typeof idToken === "string" && idToken.length > 0,
+    [enabled, idToken],
+  );
 
   const { data, isFetching, isError, status, error } = useQuery({
     queryKey: ["userProfile"],
-    queryFn: () =>
-      apiRequestGet({
-        apiEndpoint: `${apiEndpoint}/user/profile`,
-        idToken,
-      }),
-    enabled: !!idToken,
-    select: (data) => ({
-      status: "success",
-      data,
-    }),
+    queryFn: () => apiRequestGet(apiEndpoint, "/user/profile", idToken),
+    enabled: isEnabled,
+    keepPreviousData: true,
   });
 
   if (stage === "dev" || stage === "staging") {

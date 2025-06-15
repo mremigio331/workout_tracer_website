@@ -1,7 +1,8 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Layout, Menu, Button, Avatar } from "antd";
 import { Link } from "react-router-dom";
-import { UserContext } from "../provider/UserAuthenticationProvider"; // Import UserContext
+import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider"; // Import UserAuthenticationContext
+import { useStravaProfile } from "../provider/UserStravaProvider";
 
 const { Header } = Layout;
 
@@ -13,8 +14,20 @@ const Navbar = () => {
     initiateSignIn,
     initiateSignUp,
     logoutUser,
-  } = useContext(UserContext); // Get initiateSignIn and initiateSignUp from context
+  } = useContext(UserAuthenticationContext);
   const [current, setCurrent] = useState("home");
+  const { stravaProfile } = useStravaProfile();
+
+  // State for avatar image
+  const [avatarImg, setAvatarImg] = useState(null);
+
+  useEffect(() => {
+    if (stravaProfile && stravaProfile.profile_medium) {
+      setAvatarImg(stravaProfile.profile_medium);
+    } else {
+      setAvatarImg(null);
+    }
+  }, [stravaProfile]);
 
   const onClick = (e) => {
     console.log("click ", e);
@@ -34,7 +47,11 @@ const Navbar = () => {
       ? {
           label: (
             <span>
-              <Avatar style={{ backgroundColor: "#87d068" }} icon="avatar" />
+              <Avatar
+                style={{ backgroundColor: "#87d068" }}
+                src={avatarImg ? avatarImg : undefined}
+                icon={!avatarImg ? "user" : undefined}
+              />
               <span style={{ color: "white", marginLeft: "10px" }}>
                 {nickname}
               </span>

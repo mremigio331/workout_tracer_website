@@ -38,13 +38,16 @@ export const ApiProvider = ({ children }) => {
     }
   };
 
+  // Memoize setApiEndpoint so it doesn't change on every render
+  const stableSetApiEndpoint = useMemo(() => setApiEndpoint, [state.stage]);
+
   const value = useMemo(
     () => ({
       apiEndpoint: state.apiEndpoint,
       stage: state.stage,
-      setApiEndpoint: state.stage === "dev" ? setApiEndpoint : undefined,
+      setApiEndpoint: state.stage === "dev" ? stableSetApiEndpoint : undefined,
     }),
-    [state.apiEndpoint, state.stage],
+    [state.apiEndpoint, state.stage, stableSetApiEndpoint],
   );
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;

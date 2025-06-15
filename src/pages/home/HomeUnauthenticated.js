@@ -1,12 +1,14 @@
 import React, { useContext } from "react";
 import { Button, Layout, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../../provider/UserAuthenticationProvider";
+import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
 const HomeUnauthenticated = () => {
-  const { initiateSignIn, initiateSignUp } = useContext(UserContext);
+  const { initiateSignIn, initiateSignUp } = useContext(
+    UserAuthenticationContext,
+  );
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

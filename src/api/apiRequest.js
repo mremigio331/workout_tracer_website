@@ -1,41 +1,37 @@
 import axios from "axios";
 
-export const apiRequestGet = async ({ apiEndpoint, idToken }) => {
-  const response = await axios.get(apiEndpoint, {
+export const apiRequestGet = (apiEndpoint, route, idToken) => {
+  return axios.get(encodeURI(`${apiEndpoint}${route}`), {
     headers: {
       "Content-Type": "application/json",
       ...(idToken && { Authorization: `Bearer ${idToken}` }),
     },
   });
-  return response.data;
 };
 
-export const apiRequestPost = async ({ apiEndpoint, idToken, body }) => {
-  const response = await axios.post(apiEndpoint, body, {
+export const apiRequestPost = ({ apiEndpoint, idToken, body }) => {
+  return axios.post(apiEndpoint, body, {
     headers: {
       "Content-Type": "application/json",
       ...(idToken && { Authorization: `Bearer ${idToken}` }),
     },
   });
-  return response.data;
 };
 
-export const apiRequestPut = async ({ apiEndpoint, idToken, body }) => {
-  const response = await axios.put(apiEndpoint, body, {
+export const apiRequestPut = ({ apiEndpoint, idToken, body }) => {
+  return axios.put(apiEndpoint, body, {
     headers: {
       "Content-Type": "application/json",
       ...(idToken && { Authorization: `Bearer ${idToken}` }),
     },
   });
-  return response.data;
 };
 
-export const apiRequestDelete = async ({ apiEndpoint, idToken }) => {
-  const response = await axios.delete(apiEndpoint, {
+export const apiRequestDelete = ({ apiEndpoint, idToken }) => {
+  return axios.delete(apiEndpoint, {
     headers: {
       "Content-Type": "application/json",
       ...(idToken && { Authorization: `Bearer ${idToken}` }),
     },
   });
-  return response.data;
 };

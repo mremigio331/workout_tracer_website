@@ -1,12 +1,15 @@
 import { STAGING, PROD, DEV } from "../constants/stages";
 
 const getStage = () => {
-  const domain = window.location.hostname.trim(); // Trim any leading/trailing spaces
+  const domain = window.location.hostname.trim();
 
-  if (domain.includes("workouttracer.com")) {
-    return PROD;
-  } else if (domain.includes("staging.workoutracer.com")) {
+  if (domain === "staging.workouttracer.com") {
     return STAGING;
+  } else if (
+    domain === "workouttracer.com" ||
+    domain === "www.workouttracer.com"
+  ) {
+    return PROD;
   }
 
   return DEV;

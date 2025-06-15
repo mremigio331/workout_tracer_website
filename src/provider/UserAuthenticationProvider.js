@@ -1,11 +1,11 @@
-import React, { createContext, useReducer, useEffect } from "react";
+import React, { createContext, useReducer, useEffect, useMemo } from "react";
 import getStage from "../utility/getStage";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import { COGNITO_CONSTANTS } from "../configs/cognitoConfig";
 import { DEV } from "../constants/stages";
 
-export const UserContext = createContext();
+export const UserAuthenticationContext = createContext();
 
 const initialState = {
   isAuthenticated: null,
@@ -156,19 +156,29 @@ const UserAuthenticationProvider = ({ children }) => {
     // eslint-disable-next-line
   }, []);
 
+  const contextValue = useMemo(
+    () => ({
+      isAuthenticated: state.isAuthenticated,
+      idToken: state.idToken,
+      accessToken: state.accessToken,
+      initiateSignIn,
+      initiateSignUp,
+      logoutUser,
+    }),
+    [
+      state.isAuthenticated,
+      state.idToken,
+      state.accessToken,
+      initiateSignIn,
+      initiateSignUp,
+      logoutUser,
+    ],
+  );
+
   return (
-    <UserContext.Provider
-      value={{
-        isAuthenticated: state.isAuthenticated,
-        idToken: state.idToken,
-        accessToken: state.accessToken,
-        initiateSignIn,
-        initiateSignUp,
-        logoutUser,
-      }}
-    >
+    <UserAuthenticationContext.Provider value={contextValue}>
       {children}
-    </UserContext.Provider>
+    </UserAuthenticationContext.Provider>
   );
 };
 

@@ -6,12 +6,14 @@ const { Content } = Layout;
 const { Title, Text } = Typography;
 import HomeAuthenticated from "./HomeAuthenticated";
 import HomeUnauthenticated from "./HomeUnauthenticated";
-import { UserContext } from "../../provider/UserAuthenticationProvider";
+import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 
 const Home = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useContext(UserContext);
-  console.log("isAuthenticated", isAuthenticated);
+  const { isAuthenticated } = useContext(UserAuthenticationContext);
+
+  // Debug: log on every render
+  console.log("Home component rerender, isAuthenticated:", isAuthenticated);
 
   return isAuthenticated ? <HomeAuthenticated /> : <HomeUnauthenticated />;
 };
