@@ -7,6 +7,7 @@ import UserAuthenticationProvider from "./provider/UserAuthenticationProvider";
 import ApiProvider from "./provider/ApiProvider";
 import { UserStravaProvider } from "./provider/UserStravaProvider";
 import { UserProfileProvider } from "./provider/UserProfileProvider";
+import { StravaWorkoutsProvider } from "./provider/StravaWorkoutsProvider";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,9 @@ createRoot(document.getElementById("app")).render(
       <UserAuthenticationProvider>
         <UserProfileProvider>
           <UserStravaProvider>
-            <WorkoutTracer />
+            <StravaWorkoutsProvider>
+              <WorkoutTracer />
+            </StravaWorkoutsProvider>
           </UserStravaProvider>
         </UserProfileProvider>
       </UserAuthenticationProvider>

@@ -7,17 +7,17 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
-    publicPath: "/", // ✅ This line is required for correct asset loading
+    publicPath: "/",
     clean: true,
   },
 
-  devtool: "eval-source-map", // Better source maps for debugging
+  devtool: "eval-source-map",
   resolve: {
-    extensions: [".js", ".jsx"], // Allow omitting .js and .jsx in imports
+    extensions: [".js", ".jsx"],
   },
   devServer: {
     static: {
-      directory: path.resolve(__dirname, "public"), // ⬅️ Point to static assets folder, not dist
+      directory: path.resolve(__dirname, "public"),
       publicPath: "/",
     },
     historyApiFallback: true,
@@ -30,7 +30,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/, // Correct regex for JS/JSX files
+        test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: "babel-loader",
@@ -41,8 +41,11 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        include: path.resolve(__dirname, "src"),
         use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        type: "asset/resource",
       },
     ],
   },
