@@ -1,9 +1,9 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import { Layout, Menu, Button, Avatar } from "antd";
 import { Link } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider"; // Import UserAuthenticationContext
 import { useStravaProfile } from "../provider/UserStravaProvider";
-
+import getStage from "../utility/getStage";
 const { Header } = Layout;
 
 const Navbar = () => {
@@ -17,6 +17,15 @@ const Navbar = () => {
   } = useContext(UserAuthenticationContext);
   const [current, setCurrent] = useState("home");
   const { stravaProfile } = useStravaProfile();
+
+  const stage = getStage();
+  console.log("Current Stage:", stage);
+
+  const siteName = useMemo(() => {
+    return stage.toLowerCase() != "prod"
+      ? `${stage} Workout Tracer`
+      : "Workout Tracer";
+  }, [stage]);
 
   // State for avatar image
   const [avatarImg, setAvatarImg] = useState(null);
@@ -38,7 +47,7 @@ const Navbar = () => {
     {
       label: (
         <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-          Workout Tracer
+          {siteName}
         </Link>
       ),
       key: "home",
@@ -135,7 +144,7 @@ const Navbar = () => {
           }}
         >
           <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-            Workout Tracer
+            {siteName}
           </Link>
         </div>
         <Menu
