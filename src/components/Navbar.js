@@ -1,9 +1,10 @@
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { Layout, Menu, Button, Avatar } from "antd";
 import { Link } from "react-router-dom";
-import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider"; // Import UserAuthenticationContext
+import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { useStravaProfile } from "../provider/UserStravaProvider";
 import getStage from "../utility/getStage";
+import logo from "../assets/workout_tracer.png"; // Import your logo
 const { Header } = Layout;
 
 const Navbar = () => {
@@ -137,14 +138,33 @@ const Navbar = () => {
       >
         <div
           style={{
-            color: "white",
-            fontSize: "20px",
-            fontWeight: "bold",
+            display: "flex",
+            alignItems: "center",
             backgroundColor: "transparent",
           }}
         >
-          <Link to="/" style={{ color: "white", textDecoration: "none" }}>
-            {siteName}
+          <Link to="/" style={{ display: "flex", alignItems: "center" }}>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: 36,
+                marginRight: 12,
+                display: "inline-block",
+                verticalAlign: "middle",
+              }}
+            />
+            <span
+              style={{
+                color: "white",
+                fontSize: "20px",
+                fontWeight: "bold",
+                backgroundColor: "transparent",
+                verticalAlign: "middle",
+              }}
+            >
+              {siteName}
+            </span>
           </Link>
         </div>
         <Menu
