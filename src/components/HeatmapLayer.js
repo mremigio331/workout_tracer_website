@@ -1,6 +1,14 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 
+/**
+ * HeatmapLayer component for react-leaflet.
+ * Adds a Leaflet.heat heatmap layer to the map using the provided points.
+ *
+ * @param {Object} props
+ * @param {Array<Array<number>>} props.points - Array of [lat, lng] points for the heatmap.
+ * @returns {null}
+ */
 const HeatmapLayer = ({ points }) => {
   const map = useMap();
   useEffect(() => {
