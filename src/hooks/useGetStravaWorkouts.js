@@ -8,7 +8,7 @@ const fetchAllWorkouts = async (apiEndpoint, idToken) => {
   let allWorkouts = [];
   let nextToken = null;
   let prevToken = null;
-  const limit = 100;
+  const limit = 500;
 
   do {
     let endpoint = `/strava/workouts?limit=${limit}`;

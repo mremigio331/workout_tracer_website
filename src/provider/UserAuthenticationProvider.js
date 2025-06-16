@@ -42,6 +42,8 @@ const UserAuthenticationProvider = ({ children }) => {
   const region = cognitoConfig.region;
   const responseType = "code";
 
+  console.log("Redirect URI:", redirectUri);
+
   if (!cognitoDomain || !clientId || !redirectUri || !region) {
     throw new Error("Missing required Cognito configuration");
   }

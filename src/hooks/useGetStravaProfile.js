@@ -25,6 +25,8 @@ const useGetStravaProfile = () => {
     enabled: isEnabled,
     keepPreviousData: true,
     retry: 0, // Only try once, do not retry on failure
+    staleTime: 1000 * 60 * 10, // 10 minutes: prevents refetch if data is fresh
+    cacheTime: 1000 * 60 * 30, // 30 minutes: keeps data in cache
   });
 
   if (stage === "dev" || stage === "staging") {
