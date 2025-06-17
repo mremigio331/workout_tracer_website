@@ -36,38 +36,40 @@ const WorkoutStats = ({
         {Object.entries(workoutTypeStats)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([type, stats]) => (
-            <Col xs={24} sm={24} md={24} lg={8} xl={8} key={type}>
+            <Col span={24} key={type}>
               <Card
                 style={{
                   borderLeft: `8px solid ${workoutTypeColor(type)}`,
-                  minHeight: 360,
-                  fontSize: 24,
+                  minHeight: 0,
+                  fontSize: 16,
+                  width: "100%",
+                  marginBottom: 16,
                 }}
-                title={<span style={{ fontSize: 32 }}>{type}</span>}
+                title={<span style={{ fontSize: 20 }}>{type}</span>}
                 headStyle={{
                   color: workoutTypeColor(type),
-                  fontSize: 32,
+                  fontSize: 20,
                 }}
               >
                 {stats.totalDistance > 0 && (
-                  <p style={{ fontSize: 24 }}>
+                  <p style={{ fontSize: 16 }}>
                     <b>Total Distance:</b>{" "}
                     {`${(stats.totalDistance / 1000).toFixed(2)} km`}
                   </p>
                 )}
                 {stats.totalElevation > 0 && (
-                  <p style={{ fontSize: 24 }}>
+                  <p style={{ fontSize: 16 }}>
                     <b>Total Elevation:</b>{" "}
                     {`${stats.totalElevation.toFixed(0)} m`}
                   </p>
                 )}
                 {stats.totalKj > 0 && (
-                  <p style={{ fontSize: 24 }}>
+                  <p style={{ fontSize: 16 }}>
                     <b>Calories Burned:</b>{" "}
                     {`${(stats.totalKj * 0.239006).toFixed(0)} cal`}
                   </p>
                 )}
-                <p style={{ fontSize: 24 }}>
+                <p style={{ fontSize: 16 }}>
                   <b>Workouts:</b> {stats.count}
                 </p>
               </Card>

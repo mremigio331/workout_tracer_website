@@ -63,7 +63,7 @@ const WorkoutCards = ({
       <Title level={4}>Your Strava Workouts</Title>
       <Row gutter={[16, 16]}>
         {paginatedWorkouts.map((workout, idx) => (
-          <Col xs={24} sm={12} md={8} lg={6} xl={4.8} key={workout.id || idx}>
+          <Col span={24} key={workout.id || idx}>
             <Card
               title={
                 <Button
@@ -78,6 +78,7 @@ const WorkoutCards = ({
               style={{
                 marginBottom: 16,
                 borderLeft: `8px solid ${workoutTypeColor(workout.type)}`,
+                width: "100%",
               }}
               extra={
                 <Checkbox

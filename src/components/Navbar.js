@@ -5,6 +5,7 @@ import { UserAuthenticationContext } from "../provider/UserAuthenticationProvide
 import { useStravaProfile } from "../provider/UserStravaProvider";
 import getStage from "../utility/getStage";
 import logo from "../assets/workout_tracer.png"; // Import your logo
+import { useMediaQuery } from "react-responsive";
 const { Header } = Layout;
 
 const Navbar = () => {
@@ -123,6 +124,8 @@ const Navbar = () => {
         },
   ];
 
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+
   return (
     <Layout>
       <Header
@@ -157,7 +160,7 @@ const Navbar = () => {
             <span
               style={{
                 color: "white",
-                fontSize: "20px",
+                fontSize: isMobile ? "15px" : "20px",
                 fontWeight: "bold",
                 backgroundColor: "transparent",
                 verticalAlign: "middle",

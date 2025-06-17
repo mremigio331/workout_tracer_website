@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import { useStravaWorkouts } from "../../provider/StravaWorkoutsProvider";
-import { MapContainer, TileLayer, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import { useMediaQuery } from "react-responsive";
@@ -47,6 +47,27 @@ import {
 const { Content } = Layout;
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+
+// Helper component to sync map center with localStorage
+const MapCenterSync = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center);
+    // Save center to localStorage on moveend
+    const onMove = () => {
+      const c = map.getCenter();
+      localStorage.setItem(
+        "workoutTracerMapCenter",
+        JSON.stringify([c.lat, c.lng]),
+      );
+    };
+    map.on("moveend", onMove);
+    return () => {
+      map.off("moveend", onMove);
+    };
+  }, [center, map]);
+  return null;
+};
 
 const HomeAuthenticated = () => {
   const navigate = useNavigate();
@@ -188,8 +209,8 @@ const HomeAuthenticated = () => {
   // Responsive: detect if mobile (width <= 768px)
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
-  // Show/hide background map
-  const [showTileLayer, setShowTileLayer] = useState(true);
+  // Mobile UI state for showing sections
+  const [showMobileSection, setShowMobileSection] = useState(null); // "filters", "stats", "workouts"
 
   // Ref for map export (the visible map container)
   const mapExportRef = React.useRef(null);
@@ -243,179 +264,404 @@ const HomeAuthenticated = () => {
     [workoutTypes, typeToIds, includedIds],
   );
 
+  // Memo for last activity center (latest workout with GPS location)
+  const lastActivityCenter = useMemo(() => {
+    if (!stravaWorkouts || includedIds.length === 0) return FALLBACK_CENTER;
+    const sorted = [...stravaWorkouts]
+      .filter(
+        (w) => includedIds.includes(w.id) && w.map && w.map.summary_polyline,
+      )
+      .sort((a, b) => {
+        const aTime = a.start_date_local
+          ? new Date(a.start_date_local).getTime()
+          : 0;
+        const bTime = b.start_date_local
+          ? new Date(b.start_date_local).getTime()
+          : 0;
+        return bTime - aTime;
+      });
+    if (!sorted.length) return FALLBACK_CENTER;
+    const polyline = sorted[0].map.summary_polyline;
+    if (!polyline) return FALLBACK_CENTER;
+    const points = require("../../utility/polyline").decodePolyline(polyline);
+    return points.length ? points[0] : FALLBACK_CENTER;
+  }, [stravaWorkouts, includedIds]);
+
+  // Get initial center from localStorage or fallback
+  const initialMapCenter = useMemo(() => {
+    const stored = localStorage.getItem("workoutTracerMapCenter");
+    if (stored) {
+      try {
+        const arr = JSON.parse(stored);
+        if (
+          Array.isArray(arr) &&
+          arr.length === 2 &&
+          arr.every(Number.isFinite)
+        ) {
+          return arr;
+        }
+      } catch {}
+    }
+    return lastActivityCenter;
+  }, [lastActivityCenter]);
+
+  // Show/hide background map
+  const [showTileLayer, setShowTileLayer] = useState(true);
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Content style={{ padding: isMobile ? "8px" : "50px" }}>
-        <div
-          style={{ textAlign: "left", marginTop: isMobile ? "16px" : "50px" }}
-        >
-          <Title level={2} style={{ fontSize: isMobile ? 22 : undefined }}>
-            {isUserFetching
-              ? "Loading User Profile..."
-              : ` ${userProfile?.name || name || "User"}'s Workout Tracer`}
-          </Title>
-        </div>
-        {/* Maps */}
-        {!isStravaWorkoutFetching && mapMode === "heat" && (
-          <div style={{ margin: isMobile ? "20px 0" : "40px 0" }}>
-            <Title level={5} style={{ fontSize: isMobile ? 16 : undefined }}>
-              Workout Heatmap
-            </Title>
+      <Content style={{ padding: 0 }}>
+        {isMobile ? (
+          // MOBILE LAYOUT
+          <div>
+            {/* Map takes up 75% of the viewport height */}
             <div
-              ref={mapExportRef}
-              style={{ position: "relative", width: "100%" }}
+              style={{ width: "100vw", height: "75vh", position: "relative" }}
             >
               <MapContainer
                 style={{
-                  height: isMobile ? MAP_HEIGHT_MOBILE : MAP_HEIGHT_DESKTOP,
-                  width: "100%",
+                  height: "100%",
+                  width: "100vw",
                 }}
-                center={
-                  heatmapPoints.length > 0 ? heatmapPoints[0] : FALLBACK_CENTER
-                }
+                center={initialMapCenter}
                 zoom={12}
                 scrollWheelZoom={true}
               >
+                <MapCenterSync center={initialMapCenter} />
                 {showTileLayer && (
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="&copy; OpenStreetMap contributors"
                   />
                 )}
-                {heatmapPoints.length > 0 && (
+                {mapMode === "heat" && heatmapPoints.length > 0 && (
                   <HeatmapLayer points={heatmapPoints} />
                 )}
+                {mapMode === "lines" &&
+                  polylines.map((line, idx) =>
+                    line.positions.length > 0 ? (
+                      <Polyline
+                        key={line.id || idx}
+                        positions={line.positions}
+                        color={workoutTypeColor(line.type)}
+                        weight={3}
+                      />
+                    ) : null,
+                  )}
               </MapContainer>
             </div>
-            <MapControls
-              mapMode={mapMode}
-              setMapMode={setMapMode}
-              isMobile={isMobile}
-              showTileLayer={showTileLayer}
-              setShowTileLayer={setShowTileLayer}
-              handleExportMap={handleExportMap}
-              allSelected={allSelected}
-              handleSelectAll={handleSelectAll}
-              handleDeselectAll={handleDeselectAll}
-              workoutTypes={workoutTypes}
-              typeAllSelected={typeAllSelected}
-              handleSelectAllByType={handleSelectAllByType}
-              handleDeselectAllByType={handleDeselectAllByType}
-              workoutTypeColor={workoutTypeColor}
-            />
-          </div>
-        )}
-        {!isStravaWorkoutFetching && mapMode === "lines" && (
-          <div style={{ margin: isMobile ? "20px 0" : "40px 0" }}>
-            <Title level={5} style={{ fontSize: isMobile ? 16 : undefined }}>
-              Workout Lines
-            </Title>
+            {/* Mobile Section Buttons */}
             <div
-              ref={mapExportRef}
-              style={{ position: "relative", width: "100%" }}
+              style={{
+                display: "flex",
+                justifyContent: "space-around",
+                alignItems: "center",
+                padding: "12px 0",
+                background: "#fff",
+                borderBottom: "1px solid #eee",
+                position: "sticky",
+                top: 0,
+                zIndex: 10,
+              }}
             >
-              <MapContainer
-                style={{
-                  height: isMobile ? MAP_HEIGHT_MOBILE : MAP_HEIGHT_DESKTOP,
-                  width: "100%",
-                }}
-                center={
-                  polylines.length > 0
-                    ? polylines[0].positions[0]
-                    : FALLBACK_CENTER
+              <Button
+                type={showMobileSection === "filters" ? "primary" : "default"}
+                onClick={() =>
+                  setShowMobileSection(
+                    showMobileSection === "filters" ? null : "filters",
+                  )
                 }
-                zoom={12}
-                scrollWheelZoom={true}
+                style={{ flex: 1, margin: "0 4px" }}
               >
-                {showTileLayer && (
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributors"
-                  />
-                )}
-                {polylines.map((line, idx) =>
-                  line.positions.length > 0 ? (
-                    <Polyline
-                      key={line.id || idx}
-                      positions={line.positions}
-                      color={workoutTypeColor(line.type)}
-                      weight={3}
-                    />
-                  ) : null,
-                )}
-              </MapContainer>
+                Filters & Map Controls
+              </Button>
+              <Button
+                type={showMobileSection === "stats" ? "primary" : "default"}
+                onClick={() =>
+                  setShowMobileSection(
+                    showMobileSection === "stats" ? null : "stats",
+                  )
+                }
+                style={{ flex: 1, margin: "0 4px" }}
+              >
+                Stats
+              </Button>
+              <Button
+                type={showMobileSection === "workouts" ? "primary" : "default"}
+                onClick={() =>
+                  setShowMobileSection(
+                    showMobileSection === "workouts" ? null : "workouts",
+                  )
+                }
+                style={{ flex: 1, margin: "0 4px" }}
+              >
+                Workouts
+              </Button>
             </div>
-            <MapControls
-              mapMode={mapMode}
-              setMapMode={setMapMode}
-              isMobile={isMobile}
-              showTileLayer={showTileLayer}
-              setShowTileLayer={setShowTileLayer}
-              handleExportMap={handleExportMap}
-              allSelected={allSelected}
-              handleSelectAll={handleSelectAll}
-              handleDeselectAll={handleDeselectAll}
-              workoutTypes={workoutTypes}
-              typeAllSelected={typeAllSelected}
-              handleSelectAllByType={handleSelectAllByType}
-              handleDeselectAllByType={handleDeselectAllByType}
-              workoutTypeColor={workoutTypeColor}
-            />
+            {/* Mobile Section Content */}
+            <div style={{ padding: 8 }}>
+              {showMobileSection === "filters" && (
+                <>
+                  {/* Search/Filter Bar */}
+                  <div
+                    style={{
+                      margin: "16px 0",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    <Select
+                      allowClear
+                      placeholder="Filter by Type"
+                      style={{ minWidth: 120, marginRight: 8 }}
+                      value={searchType}
+                      onChange={setSearchType}
+                      options={workoutTypes.map((type) => ({
+                        value: type,
+                        label: type,
+                      }))}
+                    />
+                    <RangePicker
+                      style={{ minWidth: 160, marginRight: 8 }}
+                      value={searchDateRange}
+                      onChange={setSearchDateRange}
+                      allowEmpty={[true, true]}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: 8,
+                      background: "#fff",
+                      borderRadius: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <MapControls
+                      mapMode={mapMode}
+                      setMapMode={setMapMode}
+                      isMobile={isMobile}
+                      showTileLayer={showTileLayer}
+                      setShowTileLayer={setShowTileLayer}
+                      handleExportMap={handleExportMap}
+                      allSelected={allSelected}
+                      handleSelectAll={handleSelectAll}
+                      handleDeselectAll={handleDeselectAll}
+                      workoutTypes={workoutTypes}
+                      typeAllSelected={typeAllSelected}
+                      handleSelectAllByType={handleSelectAllByType}
+                      handleDeselectAllByType={handleDeselectAllByType}
+                      workoutTypeColor={workoutTypeColor}
+                    />
+                  </div>
+                </>
+              )}
+              {showMobileSection === "stats" && (
+                <WorkoutStats
+                  isStravaWorkoutFetching={isStravaWorkoutFetching}
+                  stravaWorkouts={stravaWorkouts}
+                  workoutTypeStats={workoutTypeStats}
+                  workoutTypeColor={workoutTypeColor}
+                />
+              )}
+              {showMobileSection === "workouts" && (
+                <WorkoutCards
+                  isStravaWorkoutFetching={isStravaWorkoutFetching}
+                  stravaWorkouts={stravaWorkouts}
+                  filteredWorkouts={filteredWorkouts}
+                  paginatedWorkouts={paginatedWorkouts}
+                  currentPage={currentPage}
+                  setCurrentPage={setCurrentPage}
+                  totalPages={totalPages}
+                  includedIds={includedIds}
+                  handleCheckboxChange={handleCheckboxChange}
+                  showWorkoutModal={showWorkoutModal}
+                  modalVisible={modalVisible}
+                  selectedWorkout={selectedWorkout}
+                  handleModalClose={handleModalClose}
+                />
+              )}
+              <WorkoutDetailsModal
+                open={modalVisible}
+                workout={selectedWorkout}
+                onCancel={handleModalClose}
+              />
+            </div>
+          </div>
+        ) : (
+          // DESKTOP LAYOUT
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              height: "100vh",
+              overflow: "hidden",
+            }}
+          >
+            {/* Left: Map and Controls */}
+            <div
+              style={{
+                flex: "0 0 70vw",
+                maxWidth: "70vw",
+                minWidth: "420px",
+                background: "#fff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                borderRight: "1px solid #f0f0f0",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                position: "sticky",
+                top: 0,
+                height: "100vh",
+                zIndex: 2,
+              }}
+            >
+              <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+                <div
+                  ref={mapExportRef}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: 0,
+                    position: "relative",
+                  }}
+                >
+                  <MapContainer
+                    style={{
+                      height: "100%",
+                      width: "100%",
+                    }}
+                    center={initialMapCenter}
+                    zoom={12}
+                    scrollWheelZoom={true}
+                  >
+                    <MapCenterSync center={initialMapCenter} />
+                    {showTileLayer && (
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; OpenStreetMap contributors"
+                      />
+                    )}
+                    {mapMode === "heat" && heatmapPoints.length > 0 && (
+                      <HeatmapLayer points={heatmapPoints} />
+                    )}
+                    {mapMode === "lines" &&
+                      polylines.map((line, idx) =>
+                        line.positions.length > 0 ? (
+                          <Polyline
+                            key={line.id || idx}
+                            positions={line.positions}
+                            color={workoutTypeColor(line.type)}
+                            weight={3}
+                          />
+                        ) : null,
+                      )}
+                  </MapContainer>
+                </div>
+              </div>
+            </div>
+            {/* Right: Stats and Workouts */}
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                maxWidth: "30vw",
+                height: "100vh",
+                overflowY: "auto",
+                background: "#fafcff",
+                padding: 32,
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div style={{ textAlign: "left", marginTop: "32px" }}>
+                <Title level={2}>
+                  {isUserFetching
+                    ? "Loading User Profile..."
+                    : ` ${userProfile?.name || name || "User"}'s Workout Tracer`}
+                </Title>
+              </div>
+              {/* Search/Filter Bar */}
+              <div
+                style={{
+                  margin: "32px 0 16px 0",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 16,
+                }}
+              >
+                <Select
+                  allowClear
+                  placeholder="Filter by Type"
+                  style={{ minWidth: 180, marginRight: 8 }}
+                  value={searchType}
+                  onChange={setSearchType}
+                  options={workoutTypes.map((type) => ({
+                    value: type,
+                    label: type,
+                  }))}
+                />
+                <RangePicker
+                  style={{ minWidth: 260, marginRight: 8 }}
+                  value={searchDateRange}
+                  onChange={setSearchDateRange}
+                  allowEmpty={[true, true]}
+                />
+              </div>
+              <div
+                style={{
+                  padding: 16,
+                  borderTop: "1px solid #f0f0f0",
+                  background: "#fff",
+                }}
+              >
+                <MapControls
+                  mapMode={mapMode}
+                  setMapMode={setMapMode}
+                  isMobile={isMobile}
+                  showTileLayer={showTileLayer}
+                  setShowTileLayer={setShowTileLayer}
+                  handleExportMap={handleExportMap}
+                  allSelected={allSelected}
+                  handleSelectAll={handleSelectAll}
+                  handleDeselectAll={handleDeselectAll}
+                  workoutTypes={workoutTypes}
+                  typeAllSelected={typeAllSelected}
+                  handleSelectAllByType={handleSelectAllByType}
+                  handleDeselectAllByType={handleDeselectAllByType}
+                  workoutTypeColor={workoutTypeColor}
+                />
+              </div>
+              <WorkoutStats
+                isStravaWorkoutFetching={isStravaWorkoutFetching}
+                stravaWorkouts={stravaWorkouts}
+                workoutTypeStats={workoutTypeStats}
+                workoutTypeColor={workoutTypeColor}
+              />
+              <WorkoutCards
+                isStravaWorkoutFetching={isStravaWorkoutFetching}
+                stravaWorkouts={stravaWorkouts}
+                filteredWorkouts={filteredWorkouts}
+                paginatedWorkouts={paginatedWorkouts}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                totalPages={totalPages}
+                includedIds={includedIds}
+                handleCheckboxChange={handleCheckboxChange}
+                showWorkoutModal={showWorkoutModal}
+                modalVisible={modalVisible}
+                selectedWorkout={selectedWorkout}
+                handleModalClose={handleModalClose}
+              />
+              <WorkoutDetailsModal
+                open={modalVisible}
+                workout={selectedWorkout}
+                onCancel={handleModalClose}
+              />
+            </div>
           </div>
         )}
-        {/* Search/Filter Bar */}
-        <div
-          style={{
-            margin: "32px 0 16px 0",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 16,
-          }}
-        >
-          <Select
-            allowClear
-            placeholder="Filter by Type"
-            style={{ minWidth: 180, marginRight: 8 }}
-            value={searchType}
-            onChange={setSearchType}
-            options={workoutTypes.map((type) => ({
-              value: type,
-              label: type,
-            }))}
-          />
-          <RangePicker
-            style={{ minWidth: 260, marginRight: 8 }}
-            value={searchDateRange}
-            onChange={setSearchDateRange}
-            allowEmpty={[true, true]}
-          />
-        </div>
-        <WorkoutStats
-          isStravaWorkoutFetching={isStravaWorkoutFetching}
-          stravaWorkouts={stravaWorkouts}
-          workoutTypeStats={workoutTypeStats}
-          workoutTypeColor={workoutTypeColor}
-        />
-        <WorkoutCards
-          isStravaWorkoutFetching={isStravaWorkoutFetching}
-          stravaWorkouts={stravaWorkouts}
-          filteredWorkouts={filteredWorkouts}
-          paginatedWorkouts={paginatedWorkouts}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalPages={totalPages}
-          includedIds={includedIds}
-          handleCheckboxChange={handleCheckboxChange}
-          showWorkoutModal={showWorkoutModal}
-          modalVisible={modalVisible}
-          selectedWorkout={selectedWorkout}
-          handleModalClose={handleModalClose}
-        />
-        <WorkoutDetailsModal
-          open={modalVisible}
-          workout={selectedWorkout}
-          onCancel={handleModalClose}
-        />
       </Content>
     </Layout>
   );
