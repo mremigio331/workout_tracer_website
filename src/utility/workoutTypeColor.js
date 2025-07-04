@@ -25,7 +25,7 @@ const workoutTypeColor = (type) => {
     case "Handcycle":
       return "#F0F0F0"; // Very Light Gray – lower volume, may lack GPS
     case "Hike":
-      return "#3CB44B"; // Strong Green – very popular and GPS-rich
+      return "#FF8C00"; // Dark Orange – very popular and GPS-rich, stands out from vegetation
     case "HIIT":
       return "#DADADA"; // Light Gray – indoor, grouped with Crossfit
     case "IceSkate":
