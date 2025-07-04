@@ -16,7 +16,7 @@ const useGetStravaProfile = () => {
     [idToken],
   );
 
-  const { data, isFetching, isError, status, error } = useQuery({
+  const { data, isFetching, isError, status, error, refetch } = useQuery({
     queryKey: ["stravaProfile"],
     queryFn: () =>
       apiRequestGet(apiEndpoint, "/strava/profile", idToken).then(
@@ -60,6 +60,7 @@ const useGetStravaProfile = () => {
     isStravaFetching: isFetching,
     isStravaError: isError,
     stravaStatus: status,
+    stravaRefetch: refetch,
     stravaError: error ?? null, // error will now be the error message or object thrown in apiRequestGet
   };
 };

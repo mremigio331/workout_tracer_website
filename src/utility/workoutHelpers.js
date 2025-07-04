@@ -27,9 +27,18 @@ export function getWorkoutTypeStats(stravaWorkouts, includedIds) {
 export function getHeatmapPoints(stravaWorkouts, includedIds) {
   if (!stravaWorkouts) return [];
   return stravaWorkouts
-    .filter(
-      (w) => includedIds.includes(w.id) && w.map && w.map.summary_polyline,
-    )
+    .filter((w) => {
+      if (includedIds.includes(w.id) && w.map && w.map.summary_polyline) {
+        const points = decodePolyline(w.map.summary_polyline);
+        return (
+          points.length > 0 &&
+          points.every(
+            ([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng),
+          )
+        );
+      }
+      return false;
+    })
     .flatMap((w) => decodePolyline(w.map.summary_polyline));
 }
 
@@ -37,9 +46,18 @@ export function getHeatmapPoints(stravaWorkouts, includedIds) {
 export function getPolylines(stravaWorkouts, includedIds) {
   if (!stravaWorkouts) return [];
   return stravaWorkouts
-    .filter(
-      (w) => includedIds.includes(w.id) && w.map && w.map.summary_polyline,
-    )
+    .filter((w) => {
+      if (includedIds.includes(w.id) && w.map && w.map.summary_polyline) {
+        const points = decodePolyline(w.map.summary_polyline);
+        return (
+          points.length > 0 &&
+          points.every(
+            ([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng),
+          )
+        );
+      }
+      return false;
+    })
     .map((w) => ({
       positions: decodePolyline(w.map.summary_polyline),
       type: w.type,

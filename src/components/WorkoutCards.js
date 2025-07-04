@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Typography,
   Row,
@@ -8,6 +8,7 @@ import {
   Checkbox,
   Modal,
   Descriptions,
+  Input,
 } from "antd";
 import workoutTypeColor from "../utility/workoutTypeColor";
 
@@ -30,6 +31,7 @@ const { Title } = Typography;
  * @param {boolean} props.modalVisible
  * @param {Object} props.selectedWorkout
  * @param {Function} props.handleModalClose
+ * @param {Function} props.centerOnWorkout - function(workout) to center/zoom map on this workout
  */
 const WorkoutCards = ({
   isStravaWorkoutFetching,
@@ -45,7 +47,13 @@ const WorkoutCards = ({
   modalVisible,
   selectedWorkout,
   handleModalClose,
+  centerOnWorkout, // <-- new prop
+  highlightedActivities,
+  setHighlightedActivities,
 }) => {
+  // Add local search state for filtering cards by text
+  const [localSearch, setLocalSearch] = useState("");
+
   if (isStravaWorkoutFetching) {
     return (
       <div style={{ textAlign: "center", marginTop: 32 }}>
@@ -58,11 +66,44 @@ const WorkoutCards = ({
     return null;
   }
 
+  // Filter paginatedWorkouts by local search text (case-insensitive)
+  const filteredPaginated = localSearch
+    ? paginatedWorkouts.filter(
+        (w) =>
+          (w.name || "").toLowerCase().includes(localSearch.toLowerCase()) ||
+          (w.type || "").toLowerCase().includes(localSearch.toLowerCase()),
+      )
+    : paginatedWorkouts;
+
+  // Handler to add/remove a workout from highlightedActivities
+  const toggleHighlight = (workoutId) => {
+    setHighlightedActivities((prev) =>
+      prev.includes(workoutId)
+        ? prev.filter((id) => id !== workoutId)
+        : [...prev, workoutId],
+    );
+  };
+
   return (
     <div style={{ marginTop: 40 }}>
       <Title level={4}>Your Strava Workouts</Title>
+      <div
+        style={{
+          margin: "0 0 16px 0",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Input.Search
+          placeholder="Search workouts"
+          allowClear
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
+          style={{ width: "100%" }}
+        />
+      </div>
       <Row gutter={[16, 16]}>
-        {paginatedWorkouts.map((workout, idx) => (
+        {filteredPaginated.map((workout, idx) => (
           <Col span={24} key={workout.id || idx}>
             <Card
               title={
@@ -80,7 +121,15 @@ const WorkoutCards = ({
                 borderLeft: `8px solid ${workoutTypeColor(workout.type)}`,
                 width: "100%",
               }}
-              extra={
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: 8,
+                  gap: 12,
+                }}
+              >
                 <Checkbox
                   checked={includedIds.includes(workout.id)}
                   onChange={(e) =>
@@ -89,8 +138,30 @@ const WorkoutCards = ({
                 >
                   Selected
                 </Checkbox>
-              }
-            >
+                <Button
+                  size="small"
+                  onClick={() => centerOnWorkout && centerOnWorkout(workout)}
+                  style={{ marginLeft: 0 }}
+                >
+                  Center on Map
+                </Button>
+                <Button
+                  size="small"
+                  type={
+                    highlightedActivities &&
+                    highlightedActivities.includes(workout.id)
+                      ? "primary"
+                      : "default"
+                  }
+                  onClick={() => toggleHighlight(workout.id)}
+                  style={{ marginLeft: 0 }}
+                >
+                  {highlightedActivities &&
+                  highlightedActivities.includes(workout.id)
+                    ? "Unhighlight"
+                    : "Highlight"}
+                </Button>
+              </div>
               <p>
                 <b>Type:</b> {workout.type || "N/A"}
               </p>

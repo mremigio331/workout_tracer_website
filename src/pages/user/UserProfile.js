@@ -1,8 +1,21 @@
-import React from "react";
+import React, { useEffect, useContext, useState } from "react";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import { useStravaProfile } from "../../provider/UserStravaProvider";
-import { Card, Row, Col, Avatar, Typography, Spin, Alert, Button } from "antd";
+import {
+  Card,
+  Row,
+  Col,
+  Avatar,
+  Typography,
+  Spin,
+  Alert,
+  Button,
+  Input,
+  List,
+} from "antd";
 import { STRAVA_CONFIGS } from "../../configs/stravaConfig";
+import usePutStravaCallback from "../../hooks/usePutStravaCallback";
+import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 
 const { Title, Text } = Typography;
 
@@ -37,20 +50,34 @@ const StravaProfileCard = ({
   isStravaFetching,
   stravaError,
   stage = "dev",
+  isCallbackLoading,
+  callbackError,
 }) => {
-  // Detect if the error is "Strava profile not found."
-  console.log("Strava Profile Error:", stravaError);
   const showConnectButton = stravaProfile === null;
 
-  // Map stage to config key (DEV/STAGING/PROD)
-  const configKey = (stage || "dev").toUpperCase();
-  const stravaConfig = STRAVA_CONFIGS[configKey] || STRAVA_CONFIGS.DEV;
-  const stravaAuthUrl = stravaConfig.OAUTH_URL;
+  const stageUpper = stage.toUpperCase();
+  const stravaConfig = STRAVA_CONFIGS[stageUpper];
+  const stravaAuthUrl = stravaConfig?.OAUTH_URL;
 
-  if (isStravaFetching) {
+  if (isStravaFetching || isCallbackLoading) {
     return (
       <Card title="Strava Profile">
         <Spin />
+      </Card>
+    );
+  }
+
+  if (callbackError) {
+    return (
+      <Card title="Strava Profile">
+        <Alert
+          message="Failed to connect to Strava."
+          description={callbackError.message}
+          type="error"
+        />
+        <Button type="primary" style={{ marginTop: 16 }} href={stravaAuthUrl}>
+          Try Connecting Again
+        </Button>
       </Card>
     );
   }
@@ -62,14 +89,6 @@ const StravaProfileCard = ({
         <Button type="primary" style={{ marginTop: 16 }} href={stravaAuthUrl}>
           Connect To Strava
         </Button>
-      </Card>
-    );
-  }
-
-  if (!stravaProfile) {
-    return (
-      <Card title="Strava Profile">
-        <Alert message="No Strava profile data." type="info" />
       </Card>
     );
   }
@@ -121,21 +140,64 @@ const StravaProfileCard = ({
 };
 
 const UserProfile = () => {
-  // Debug: log on every render
-  console.log("UserProfile component rerender");
-
   const { userProfile, isUserFetching } = useUserProfile();
-  const { stravaProfile, isStravaFetching, stravaError } = useStravaProfile();
+  const {
+    stravaProfile,
+    isStravaFetching,
+    stravaError,
+    stravaRefetch: refetchStravaProfile,
+  } = useStravaProfile();
+  const { putStravaCallbackAsync } = usePutStravaCallback();
+  const { idToken } = useContext(UserAuthenticationContext);
 
-  // Log context values to help debug rerenders
-  console.log("userProfile:", userProfile);
-  console.log("isUserFetching:", isUserFetching);
-  console.log("stravaProfile:", stravaProfile);
-  console.log("isStravaFetching:", isStravaFetching);
-  console.log("stravaError:", stravaError);
+  const [isCallbackLoading, setIsCallbackLoading] = useState(false);
+  const [callbackError, setCallbackError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Use a stable stage value (avoid object destructuring from window)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const isTokenReady = typeof idToken === "string" && idToken.length > 0;
+
+    if (code && isTokenReady) {
+      (async () => {
+        setIsCallbackLoading(true);
+        setCallbackError(null);
+        try {
+          await putStravaCallbackAsync(code);
+          await refetchStravaProfile();
+        } catch (err) {
+          console.error("Strava callback failed:", err);
+          setCallbackError(err);
+        } finally {
+          setIsCallbackLoading(false);
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname,
+          );
+        }
+      })();
+    }
+  }, [putStravaCallbackAsync, idToken, refetchStravaProfile]);
+
   const stage = window.STRAVA_STAGE_CONFIG?.stage || "dev";
+
+  // Example: Assume stravaProfile.workouts is an array of workouts
+  // Adjust this to match your actual data structure
+  const workouts = Array.isArray(stravaProfile?.workouts)
+    ? [...stravaProfile.workouts]
+    : [];
+
+  // Sort workouts in reverse chronological order (by start_date)
+  const sortedWorkouts = workouts.sort(
+    (a, b) => new Date(b.start_date) - new Date(a.start_date),
+  );
+
+  // Filter workouts by search term (case-insensitive, by name)
+  const filteredWorkouts = sortedWorkouts.filter((w) =>
+    w.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   return (
     <Row gutter={32} justify="center" style={{ marginTop: 40 }}>
@@ -150,7 +212,35 @@ const UserProfile = () => {
           stravaProfile={stravaProfile}
           isStravaFetching={isStravaFetching}
           stravaError={stravaError}
+          isCallbackLoading={isCallbackLoading}
+          callbackError={callbackError}
           stage={stage}
+        />
+      </Col>
+      <Col xs={24} md={20} style={{ marginTop: 40 }}>
+        <Input.Search
+          placeholder="Search workouts by name"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ marginBottom: 16, maxWidth: 400 }}
+        />
+        <List
+          header={<div>Strava Workouts</div>}
+          bordered
+          dataSource={filteredWorkouts}
+          renderItem={(item) => (
+            <List.Item>
+              <div>
+                <b>{item.name}</b>
+                <div>
+                  {item.start_date
+                    ? new Date(item.start_date).toLocaleString()
+                    : ""}
+                </div>
+              </div>
+            </List.Item>
+          )}
+          locale={{ emptyText: "No workouts found." }}
         />
       </Col>
     </Row>

@@ -3,13 +3,13 @@ import {
   STAGING_WEBSITE_ENDPOINT,
 } from "../constants/endpoints";
 
-const STAGING_REACT_APP_USER_POOL_ID = "us-west-2_eqZy0hJND";
-const STAGING_REACT_APP_USER_POOL_WEB_CLIENT_ID = "1pabnebj1t1utd1c271amgks1g";
+const STAGING_REACT_APP_USER_POOL_ID = "us-west-2_rXYhgQr1l";
+const STAGING_REACT_APP_USER_POOL_WEB_CLIENT_ID = "255dgs8d57tps872729dhgu6o8";
 const STAGING_REACT_APP_REGION = "us-west-2";
 const STAGING_REACT_APP_COGNITO_DOMAIN = "workouttracer-staging";
 
-const PROD_REACT_APP_USER_POOL_ID = "us-west-2_pIDMlzQGv";
-const PROD_REACT_APP_USER_POOL_WEB_CLIENT_ID = "3opfbbdntasbd9k9cpmches0u4";
+const PROD_REACT_APP_USER_POOL_ID = "us-west-2_Uw45nj28j";
+const PROD_REACT_APP_USER_POOL_WEB_CLIENT_ID = "caq7e5fj6dfv6ograc3cca2bl";
 const PROD_REACT_APP_REGION = "us-west-2";
 const PROD_REACT_APP_COGNITO_DOMAIN = "workouttracer";
 

@@ -33,8 +33,9 @@ const UserAuthenticationProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   const stage = getStage();
-  const cognitoConfig =
-    COGNITO_CONSTANTS[stage.toUpperCase()] || COGNITO_CONSTANTS.DEV;
+  const stageUpper = stage.toUpperCase();
+  console.log("Current Authentication Stage:", stageUpper);
+  const cognitoConfig = COGNITO_CONSTANTS[stageUpper];
 
   const cognitoDomain = cognitoConfig.domain;
   const clientId = cognitoConfig.clientId;
