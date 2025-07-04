@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Dropdown, Menu } from "antd";
+import { highlightedActivity } from "../utility/workoutTypeColor";
 
 /**
  * MapControls component for map view.
@@ -36,6 +37,7 @@ const MapControls = ({
   handleSelectAllByType,
   handleDeselectAllByType,
   workoutTypeColor,
+  highlightedActivities,
 }) => {
   // Dropdown menu for Quick Selections (types sorted alphabetically)
   const sortedTypes = [...workoutTypes].sort((a, b) => a.localeCompare(b));
@@ -53,7 +55,10 @@ const MapControls = ({
             }
             style={{
               color: "#fff",
-              background: workoutTypeColor(type),
+              background:
+                highlightedActivities && highlightedActivities.includes(type)
+                  ? highlightedActivity
+                  : workoutTypeColor(type),
               margin: 0,
             }}
           >
