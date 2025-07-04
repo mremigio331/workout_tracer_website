@@ -18,7 +18,8 @@ const getApi = () => {
     return STAGING_API_ENDPOINT;
   }
 
-  return STAGING_API_ENDPOINT;
+  return STAGING_API_ENDPOINT
+  //return 'http://localhost:5000'; // Default to local API if no match
 };
 
 export default getApi;
