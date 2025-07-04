@@ -24,7 +24,7 @@ const apiReducer = (state, action) => {
 
 export const ApiProvider = ({ children }) => {
   const stage = getStage();
-  const initialEndpoint = endpointMap[stage] || STAGING_API_ENDPOINT;
+  const initialEndpoint = endpointMap[stage.toLocaleLowerCase()] ;
 
   const [state, dispatch] = useReducer(apiReducer, {
     apiEndpoint: initialEndpoint,

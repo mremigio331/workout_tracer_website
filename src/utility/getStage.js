@@ -8,13 +8,12 @@ const getStage = () => {
   if (domain === "staging.workouttracer.com") {
     return STAGING;
   } else if (
-    domain === "workouttracer.com" ||
-    domain === "www.workouttracer.com"
+    domain === "workouttracer.com"
   ) {
     return PROD;
   }
 
-  return DEV;
+  return STAGING;
 };
 
 export default getStage;

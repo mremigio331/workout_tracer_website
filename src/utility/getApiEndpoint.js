@@ -5,16 +5,18 @@ import {
   STAGING_API_ENDPOINT,
 } from "../constants/endpoints";
 
+import { STAGING, PROD, DEV } from "../constants/stages";
+import getStage from "./getStage";
+
 const getApi = () => {
-  const domain = window.location.hostname.trim();
+ 
+  const stage = getStage()
 
-  // Extract hostnames from endpoints
-  const prodHost = PROD_WEBSITE_ENDPOINT.replace(/^https?:\/\//, "");
-  const stagingHost = STAGING_WEBSITE_ENDPOINT.replace(/^https?:\/\//, "");
+  console.log("getApi stage:", stage);
 
-  if (domain.includes(prodHost)) {
+  if (stage == PROD ) {
     return PROD_API_ENDPOINT;
-  } else if (domain.includes(stagingHost)) {
+  } else if (stage == STAGING ) {
     return STAGING_API_ENDPOINT;
   }
 

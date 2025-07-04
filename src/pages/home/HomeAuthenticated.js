@@ -18,7 +18,13 @@ import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import { useStravaWorkouts } from "../../provider/StravaWorkoutsProvider";
-import { MapContainer, TileLayer, Polyline, useMap, ZoomControl } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  useMap,
+  ZoomControl,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import { useMediaQuery } from "react-responsive";
@@ -419,7 +425,8 @@ const HomeAuthenticated = () => {
                   scrollWheelZoom={true}
                   zoomControl={false} // disable default top-left zoom control
                 >
-                  <ZoomControl position="bottomright" /> {/* Add zoom control to bottom right */}
+                  <ZoomControl position="bottomright" />{" "}
+                  {/* Add zoom control to bottom right */}
                   <MapCenterSync center={initialMapCenter} />
                   <FitMapToPolylines
                     polylines={polylines}
@@ -672,7 +679,8 @@ const HomeAuthenticated = () => {
                       scrollWheelZoom={true}
                       zoomControl={false} // disable default top-left zoom control
                     >
-                      <ZoomControl position="bottomright" /> {/* Add zoom control to bottom right */}
+                      <ZoomControl position="bottomright" />{" "}
+                      {/* Add zoom control to bottom right */}
                       <MapCenterSync center={initialMapCenter} />
                       <FitMapToPolylines
                         polylines={polylines}
