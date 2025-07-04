@@ -10,12 +10,11 @@ import {
   Spin,
   Alert,
   Button,
-  Input,
-  List,
 } from "antd";
 import { STRAVA_CONFIGS } from "../../configs/stravaConfig";
 import usePutStravaCallback from "../../hooks/usePutStravaCallback";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
+import getStage from "../../utility/getStage";
 
 const { Title, Text } = Typography;
 
@@ -38,6 +37,16 @@ const UserProfileCard = ({ userProfile, isUserFetching }) => (
       <>
         <Title level={4}>{userProfile.name || "N/A"}</Title>
         <Text type="secondary">{userProfile.email || "N/A"}</Text>
+        <br />
+        {userProfile.public_profile !== undefined ? (
+          userProfile.public_profile ? (
+            <Text style={{ color: "green" }}><b>Public Profile</b></Text>
+          ) : (
+            <Text style={{ color: "red" }}><b>Private Profile</b></Text>
+          )
+        ) : (
+          <Text>N/A</Text>
+        )}
       </>
     ) : (
       <Alert message="No user profile data." type="info" />
@@ -49,15 +58,16 @@ const StravaProfileCard = ({
   stravaProfile,
   isStravaFetching,
   stravaError,
-  stage = "dev",
+  stage,
   isCallbackLoading,
   callbackError,
 }) => {
   const showConnectButton = stravaProfile === null;
 
-  const stageUpper = stage.toUpperCase();
+  const stageUpper = getStage().toUpperCase();
   const stravaConfig = STRAVA_CONFIGS[stageUpper];
   const stravaAuthUrl = stravaConfig?.OAUTH_URL;
+  console.log("Strava Connect Debug:", { stageUpper, stageUpper, stravaConfig, stravaAuthUrl });
 
   if (isStravaFetching || isCallbackLoading) {
     return (
@@ -86,9 +96,13 @@ const StravaProfileCard = ({
     return (
       <Card title="Strava Profile">
         <Alert message="No Strava profile data." type="info" />
-        <Button type="primary" style={{ marginTop: 16 }} href={stravaAuthUrl}>
-          Connect To Strava
-        </Button>
+        {stravaAuthUrl ? (
+          <Button type="primary" style={{ marginTop: 16 }} href={stravaAuthUrl}>
+            Connect To Strava
+          </Button>
+        ) : (
+          <Alert message="Strava connection URL not configured." type="warning" />
+        )}
       </Card>
     );
   }
@@ -147,7 +161,7 @@ const UserProfile = () => {
     stravaError,
     stravaRefetch: refetchStravaProfile,
   } = useStravaProfile();
-  const { putStravaCallbackAsync } = usePutStravaCallback();
+  const { putStravaCallbackAsync, status: stravaCallbackStatus } = usePutStravaCallback();
   const { idToken } = useContext(UserAuthenticationContext);
 
   const [isCallbackLoading, setIsCallbackLoading] = useState(false);
@@ -181,23 +195,7 @@ const UserProfile = () => {
     }
   }, [putStravaCallbackAsync, idToken, refetchStravaProfile]);
 
-  const stage = window.STRAVA_STAGE_CONFIG?.stage || "dev";
-
-  // Example: Assume stravaProfile.workouts is an array of workouts
-  // Adjust this to match your actual data structure
-  const workouts = Array.isArray(stravaProfile?.workouts)
-    ? [...stravaProfile.workouts]
-    : [];
-
-  // Sort workouts in reverse chronological order (by start_date)
-  const sortedWorkouts = workouts.sort(
-    (a, b) => new Date(b.start_date) - new Date(a.start_date),
-  );
-
-  // Filter workouts by search term (case-insensitive, by name)
-  const filteredWorkouts = sortedWorkouts.filter((w) =>
-    w.name?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const stage = getStage();
 
   return (
     <Row gutter={32} justify="center" style={{ marginTop: 40 }}>
@@ -216,32 +214,14 @@ const UserProfile = () => {
           callbackError={callbackError}
           stage={stage}
         />
-      </Col>
-      <Col xs={24} md={20} style={{ marginTop: 40 }}>
-        <Input.Search
-          placeholder="Search workouts by name"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ marginBottom: 16, maxWidth: 400 }}
-        />
-        <List
-          header={<div>Strava Workouts</div>}
-          bordered
-          dataSource={filteredWorkouts}
-          renderItem={(item) => (
-            <List.Item>
-              <div>
-                <b>{item.name}</b>
-                <div>
-                  {item.start_date
-                    ? new Date(item.start_date).toLocaleString()
-                    : ""}
-                </div>
-              </div>
-            </List.Item>
-          )}
-          locale={{ emptyText: "No workouts found." }}
-        />
+        {stravaCallbackStatus === "success" && (
+          <Alert
+            message="Strava account successfully connected! It may take about 30 minutes per 200 workouts for your profile to completely sync."
+            type="success"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
       </Col>
     </Row>
   );
