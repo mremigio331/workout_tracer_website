@@ -11,7 +11,7 @@ const STAGING_REACT_APP_COGNITO_DOMAIN = "workouttracer-staging";
 const PROD_REACT_APP_USER_POOL_ID = "us-west-2_Uw45nj28j";
 const PROD_REACT_APP_USER_POOL_WEB_CLIENT_ID = "caq7e5fj6dfv6ograc3cca2bl";
 const PROD_REACT_APP_REGION = "us-west-2";
-const PROD_REACT_APP_COGNITO_DOMAIN = "workouttracer";
+const PROD_REACT_APP_COGNITO_DOMAIN = "workouttracer-prod";
 
 export const COGNITO_CONSTANTS = {
   DEV: {

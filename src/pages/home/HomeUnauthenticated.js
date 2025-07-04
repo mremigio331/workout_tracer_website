@@ -15,26 +15,30 @@ const HomeUnauthenticated = () => {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Content style={{ padding: isMobile ? 0 : "50px" }}>
+      <Content style={{ padding: 0 }}>
         <div
           style={{
             textAlign: "center",
-            marginTop: isMobile ? 0 : "50px",
-            height: isMobile ? "100vh" : undefined,
+            // Add top padding to push the logo down
+            paddingTop: "64px",
+            height: "100vh",
             display: "flex",
             flexDirection: "column",
-            justifyContent: isMobile ? "flex-start" : undefined,
+            justifyContent: "flex-start",
+            alignItems: "center",
+            width: "100%",
+            margin: 0,
           }}
         >
           <img
             src={logo}
             alt="Workout Tracer Logo"
             style={{
-              height: isMobile ? "30vh" : 120,
-              maxHeight: isMobile ? "40vw" : undefined,
-              width: isMobile ? "100vw" : undefined,
+              height: "160px",
+              maxHeight: "160px",
+              width: "160px",
               objectFit: "cover",
-              marginBottom: isMobile ? 0 : 24,
+              marginBottom: 8,
               display: "block",
               marginLeft: "auto",
               marginRight: "auto",
@@ -42,20 +46,18 @@ const HomeUnauthenticated = () => {
           />
           <div
             style={{
-              flex: isMobile ? 1 : undefined,
               display: "flex",
               flexDirection: "column",
-              justifyContent: isMobile ? "flex-end" : undefined,
+              justifyContent: "flex-start", // align content to top
               alignItems: "center",
-              height: isMobile ? "100%" : undefined,
-              padding: isMobile ? "16px" : 0,
+              padding: "0", // remove extra padding
             }}
           >
             <Title
               level={2}
               style={{
-                fontSize: isMobile ? 22 : undefined,
-                marginTop: isMobile ? 24 : undefined,
+                fontSize: 22,
+                marginTop: 8,
               }}
             >
               Welcome to the Workout Tracer

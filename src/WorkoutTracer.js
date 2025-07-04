@@ -37,8 +37,14 @@ const WorkoutTracer = () => {
 
   return (
     <Router>
-      <Layout style={{ minHeight: "100vh" }}>
-        {/* Move NotificationBar outside of Header for better stacking and to avoid unnecessary rerenders */}
+      <Layout
+        style={{
+          minHeight: "100vh",
+          margin: 0,
+          padding: 0,
+          boxSizing: "border-box",
+        }}
+      >
         <Header
           style={{
             position: "fixed",
@@ -47,17 +53,29 @@ const WorkoutTracer = () => {
             width: "100%",
             height: 64,
             padding: 0,
+            margin: 0,
             background: "#001529",
             display: "flex",
             alignItems: "center",
+            border: "none",
+            boxShadow: "none",
+            boxSizing: "border-box",
           }}
         >
           <Navbar />
         </Header>
         <NotificationBar notifications={notifications} />
-        {/* Add paddingTop to push content below fixed header */}
-        <Layout style={{ paddingTop: 64 }}>
-          <Content style={{ padding: "24px", marginTop: 0 }}>
+        <Layout style={{ paddingTop: 64, margin: 0, boxSizing: "border-box" }}>
+          <Content
+            style={{
+              padding: 0,
+              margin: 0,
+              boxSizing: "border-box",
+              width: "100vw", // force content to full viewport width
+              maxWidth: "100vw",
+              overflowX: "hidden", // prevent horizontal scroll
+            }}
+          >
             <PageRoutes />
           </Content>
         </Layout>

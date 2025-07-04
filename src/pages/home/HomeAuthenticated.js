@@ -18,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import { useStravaWorkouts } from "../../provider/StravaWorkoutsProvider";
-import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, useMap, ZoomControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import { useMediaQuery } from "react-responsive";
@@ -386,9 +386,14 @@ const HomeAuthenticated = () => {
         {isMobile ? (
           // MOBILE LAYOUT
           <div>
-            {/* Map takes up 75% of the viewport height */}
+            {/* Map takes up full viewport height */}
             <div
-              style={{ width: "100vw", height: "75vh", position: "relative" }}
+              style={{
+                width: "100vw",
+                height: "100vh",
+                position: "relative",
+                marginTop: 0,
+              }}
             >
               {isLoading ? (
                 <div
@@ -412,7 +417,9 @@ const HomeAuthenticated = () => {
                   center={initialMapCenter}
                   zoom={12}
                   scrollWheelZoom={true}
+                  zoomControl={false} // disable default top-left zoom control
                 >
+                  <ZoomControl position="bottomright" /> {/* Add zoom control to bottom right */}
                   <MapCenterSync center={initialMapCenter} />
                   <FitMapToPolylines
                     polylines={polylines}
@@ -625,9 +632,10 @@ const HomeAuthenticated = () => {
                 alignItems: "stretch",
                 position: "sticky",
                 top: 0,
-                height: "100vh",
+                height: "calc(100vh - 64px)", // fit height below navbar (assuming navbar is 64px)
                 zIndex: 2,
                 transition: "all 0.3s",
+                marginTop: 0,
               }}
             >
               <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
@@ -662,7 +670,9 @@ const HomeAuthenticated = () => {
                       center={initialMapCenter}
                       zoom={12}
                       scrollWheelZoom={true}
+                      zoomControl={false} // disable default top-left zoom control
                     >
+                      <ZoomControl position="bottomright" /> {/* Add zoom control to bottom right */}
                       <MapCenterSync center={initialMapCenter} />
                       <FitMapToPolylines
                         polylines={polylines}

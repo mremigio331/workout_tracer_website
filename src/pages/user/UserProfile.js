@@ -1,16 +1,7 @@
 import React, { useEffect, useContext, useState } from "react";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import { useStravaProfile } from "../../provider/UserStravaProvider";
-import {
-  Card,
-  Row,
-  Col,
-  Avatar,
-  Typography,
-  Spin,
-  Alert,
-  Button,
-} from "antd";
+import { Card, Row, Col, Avatar, Typography, Spin, Alert, Button } from "antd";
 import { STRAVA_CONFIGS } from "../../configs/stravaConfig";
 import usePutStravaCallback from "../../hooks/usePutStravaCallback";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
@@ -40,9 +31,13 @@ const UserProfileCard = ({ userProfile, isUserFetching }) => (
         <br />
         {userProfile.public_profile !== undefined ? (
           userProfile.public_profile ? (
-            <Text style={{ color: "green" }}><b>Public Profile</b></Text>
+            <Text style={{ color: "green" }}>
+              <b>Public Profile</b>
+            </Text>
           ) : (
-            <Text style={{ color: "red" }}><b>Private Profile</b></Text>
+            <Text style={{ color: "red" }}>
+              <b>Private Profile</b>
+            </Text>
           )
         ) : (
           <Text>N/A</Text>
@@ -67,7 +62,12 @@ const StravaProfileCard = ({
   const stageUpper = getStage().toUpperCase();
   const stravaConfig = STRAVA_CONFIGS[stageUpper];
   const stravaAuthUrl = stravaConfig?.OAUTH_URL;
-  console.log("Strava Connect Debug:", { stageUpper, stageUpper, stravaConfig, stravaAuthUrl });
+  console.log("Strava Connect Debug:", {
+    stageUpper,
+    stageUpper,
+    stravaConfig,
+    stravaAuthUrl,
+  });
 
   if (isStravaFetching || isCallbackLoading) {
     return (
@@ -101,7 +101,10 @@ const StravaProfileCard = ({
             Connect To Strava
           </Button>
         ) : (
-          <Alert message="Strava connection URL not configured." type="warning" />
+          <Alert
+            message="Strava connection URL not configured."
+            type="warning"
+          />
         )}
       </Card>
     );
@@ -161,7 +164,8 @@ const UserProfile = () => {
     stravaError,
     stravaRefetch: refetchStravaProfile,
   } = useStravaProfile();
-  const { putStravaCallbackAsync, status: stravaCallbackStatus } = usePutStravaCallback();
+  const { putStravaCallbackAsync, status: stravaCallbackStatus } =
+    usePutStravaCallback();
   const { idToken } = useContext(UserAuthenticationContext);
 
   const [isCallbackLoading, setIsCallbackLoading] = useState(false);

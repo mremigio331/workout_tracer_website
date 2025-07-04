@@ -9,11 +9,25 @@ import { UserStravaProvider } from "./provider/UserStravaProvider";
 import { UserProfileProvider } from "./provider/UserProfileProvider";
 import { StravaWorkoutsProvider } from "./provider/StravaWorkoutsProvider";
 
+// Add this import at the top if you have a global CSS file (e.g., index.css or App.css)
+// import "./index.css";
+
 const queryClient = new QueryClient();
 
 AWS.config.update({
   region: "us-west-2",
 });
+
+// Optionally, add a global style reset here if you don't have a CSS file:
+const style = document.createElement("style");
+style.innerHTML = `
+  html, body, #app {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+`;
+document.head.appendChild(style);
 
 createRoot(document.getElementById("app")).render(
   <QueryClientProvider client={queryClient}>
