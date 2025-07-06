@@ -53,6 +53,7 @@ import {
   getTypeToIds,
   getTypeAllSelected,
 } from "../../utility/workoutHelpers";
+import { NAVBAR_HEIGHT } from "../../constants/ui";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -83,27 +84,34 @@ const MapCenterSync = ({ center }) => {
 function FitMapToPolylines({ polylines, centerLatLng }) {
   const map = useMap();
   const [hasFit, setHasFit] = useState(false);
+  const [pendingCenter, setPendingCenter] = useState(false);
 
   useEffect(() => {
-    if (
-      centerLatLng &&
-      Array.isArray(centerLatLng) &&
-      centerLatLng.length === 2
-    ) {
-      // Zoom out a few levels from detail (e.g., zoom 14 instead of 16)
-      map.setView(centerLatLng, 14); // adjust zoom as needed
-      setHasFit(true); // prevent auto-fit after manual center
-      return;
-    }
     if (!hasFit && polylines && polylines.length > 0) {
       const allPoints = polylines.flatMap((line) => line.positions);
       if (allPoints.length === 0) return;
       const bounds = allPoints.map(([lat, lng]) => [lat, lng]);
       map.fitBounds(bounds, { padding: [40, 40] });
       setHasFit(true);
+      setPendingCenter(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [polylines, map, centerLatLng, hasFit]);
+  }, [polylines, map, hasFit]);
+
+  useEffect(() => {
+    if (
+      hasFit &&
+      pendingCenter &&
+      centerLatLng &&
+      Array.isArray(centerLatLng) &&
+      centerLatLng.length === 2
+    ) {
+      // Zoom to centerLatLng after fitBounds
+      map.setView(centerLatLng, 14); // adjust zoom as needed
+      setPendingCenter(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerLatLng, hasFit, pendingCenter, map]);
 
   return null;
 }
@@ -267,15 +275,43 @@ const HomeAuthenticated = () => {
   // Export the currently displayed map (everything visible in the map container)
   const handleExportMap = async () => {
     if (!mapExportRef.current) return;
-    // Wait a tick for map to render
+
+    // Hide map controls/buttons before export
+    const controls = mapExportRef.current.querySelectorAll(
+      ".leaflet-control, .map-controls, .ant-btn, .ant-select, .ant-picker",
+    );
+    const prevDisplay = [];
+    controls.forEach((el) => {
+      prevDisplay.push(el.style.display);
+      el.style.display = "none";
+    });
+
+    // Wait a tick for UI to update
     await new Promise((resolve) => setTimeout(resolve, 100));
-    html2canvas(mapExportRef.current, {
+
+    // Force a redraw of the map overlays (polylines, etc.)
+    // This is a workaround for html2canvas not capturing SVG overlays immediately.
+    // We briefly trigger a resize event to force Leaflet to redraw overlays.
+    window.dispatchEvent(new Event("resize"));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const leafletMap = mapExportRef.current.querySelector(".leaflet-container");
+    const mapNode = leafletMap || mapExportRef.current;
+
+    html2canvas(mapNode, {
       useCORS: true,
       backgroundColor: null,
       logging: false,
       scale: 2,
-      scrollY: -window.scrollY,
+      width: mapNode.offsetWidth,
+      height: mapNode.offsetHeight,
+      windowWidth: mapNode.offsetWidth,
+      windowHeight: mapNode.offsetHeight,
     }).then((canvas) => {
+      // Restore controls/buttons after export
+      controls.forEach((el, idx) => {
+        el.style.display = prevDisplay[idx];
+      });
       const link = document.createElement("a");
       link.download = "workout-map.png";
       link.href = canvas.toDataURL();
@@ -619,113 +655,93 @@ const HomeAuthenticated = () => {
           // DESKTOP LAYOUT
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
+              position: "relative",
+              width: "100vw",
               height: "100vh",
               overflow: "hidden",
             }}
           >
-            {/* Left: Map and Controls */}
+            {/* Fullscreen Map */}
             <div
+              ref={mapExportRef}
               style={{
-                flex: collapsed ? "1 1 100vw" : "0 0 70vw",
-                maxWidth: collapsed ? "100vw" : "70vw",
-                minWidth: "420px",
-                background: "#fff",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                borderRight: collapsed ? "none" : "1px solid #f0f0f0",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "stretch",
-                position: "sticky",
-                top: 0,
-                height: "calc(100vh - 64px)", // fit height below navbar (assuming navbar is 64px)
-                zIndex: 2,
-                transition: "all 0.3s",
-                marginTop: 0,
+                position: "absolute",
+                top: NAVBAR_HEIGHT,
+                left: 0,
+                width: "100vw",
+                height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+                zIndex: 1,
               }}
             >
-              <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+              {isLoading ? (
                 <div
-                  ref={mapExportRef}
                   style={{
                     width: "100%",
                     height: "100%",
-                    minHeight: 0,
-                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#fff",
                   }}
                 >
-                  {isLoading ? (
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "#fff",
-                      }}
-                    >
-                      <Spin size="large" tip="Loading map data..." />
-                    </div>
-                  ) : (
-                    <MapContainer
-                      style={{
-                        height: "100%",
-                        width: "100%",
-                      }}
-                      center={initialMapCenter}
-                      zoom={12}
-                      scrollWheelZoom={true}
-                      zoomControl={false} // disable default top-left zoom control
-                    >
-                      <ZoomControl position="bottomright" />{" "}
-                      {/* Add zoom control to bottom right */}
-                      <MapCenterSync center={initialMapCenter} />
-                      <FitMapToPolylines
-                        polylines={polylines}
-                        centerLatLng={centerWorkoutLatLng}
-                      />
-                      {showTileLayer && (
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution="&copy; OpenStreetMap contributors"
-                        />
-                      )}
-                      {mapMode === "heat" && heatmapPoints.length > 0 && (
-                        <HeatmapLayer points={heatmapPoints} />
-                      )}
-                      {mapMode === "lines" &&
-                        polylines.map((line, idx) =>
-                          line.positions.length > 0 ? (
-                            <Polyline
-                              key={line.id || idx}
-                              positions={line.positions}
-                              color={
-                                highlightedActivities.includes(line.id)
-                                  ? highlightedActivity
-                                  : workoutTypeColor(line.type)
-                              }
-                              weight={3}
-                              highlightedActivities={highlightedActivities}
-                              setHighlightedActivities={
-                                setHighlightedActivities
-                              }
-                            />
-                          ) : null,
-                        )}
-                    </MapContainer>
-                  )}
+                  <Spin size="large" tip="Loading map data..." />
                 </div>
-              </div>
+              ) : (
+                <MapContainer
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                  }}
+                  center={initialMapCenter}
+                  zoom={12}
+                  scrollWheelZoom={true}
+                  zoomControl={false}
+                >
+                  <ZoomControl position="bottomright" />
+                  <MapCenterSync center={initialMapCenter} />
+                  <FitMapToPolylines
+                    polylines={polylines}
+                    centerLatLng={centerWorkoutLatLng}
+                  />
+                  {showTileLayer && (
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution="&copy; OpenStreetMap contributors"
+                    />
+                  )}
+                  {mapMode === "heat" && heatmapPoints.length > 0 && (
+                    <HeatmapLayer points={heatmapPoints} />
+                  )}
+                  {mapMode === "lines" &&
+                    polylines.map((line, idx) =>
+                      line.positions.length > 0 ? (
+                        <Polyline
+                          key={line.id || idx}
+                          positions={line.positions}
+                          color={
+                            highlightedActivities.includes(line.id)
+                              ? highlightedActivity
+                              : workoutTypeColor(line.type)
+                          }
+                          weight={3}
+                          highlightedActivities={highlightedActivities}
+                          setHighlightedActivities={setHighlightedActivities}
+                        />
+                      ) : null,
+                    )}
+                </MapContainer>
+              )}
             </div>
-            {/* Right: Stats and Workouts */}
+            {/* Sidebar overlays the map */}
             <div
               style={{
-                flex: collapsed ? "0 0 0" : 1,
+                position: "absolute",
+                top: NAVBAR_HEIGHT,
+                right: 0,
+                width: collapsed ? 0 : "30vw",
                 minWidth: collapsed ? 0 : "320px",
                 maxWidth: collapsed ? 0 : "30vw",
-                height: "100vh",
+                height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
                 overflowY: collapsed ? "hidden" : "auto",
                 background: "#fafcff",
                 padding: collapsed ? 0 : 32,
@@ -733,7 +749,8 @@ const HomeAuthenticated = () => {
                 display: "flex",
                 flexDirection: "column",
                 transition: "all 0.3s",
-                position: "relative",
+                zIndex: 2,
+                pointerEvents: "auto",
               }}
             >
               {/* Collapse/Expand Button */}
@@ -755,12 +772,10 @@ const HomeAuthenticated = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  // Show the button even when collapsed
                   pointerEvents: "auto",
                 }}
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               />
-              {/* Show a floating expand button when collapsed */}
               {collapsed && (
                 <Button
                   type="primary"

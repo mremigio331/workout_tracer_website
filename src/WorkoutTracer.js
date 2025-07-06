@@ -71,9 +71,9 @@ const WorkoutTracer = () => {
               padding: 0,
               margin: 0,
               boxSizing: "border-box",
-              width: "100vw", // force content to full viewport width
+              width: "100vw",
               maxWidth: "100vw",
-              overflowX: "hidden", // prevent horizontal scroll
+              overflowX: "hidden",
             }}
           >
             <PageRoutes />

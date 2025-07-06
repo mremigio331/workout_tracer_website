@@ -1,7 +1,8 @@
 import React from "react";
 import { Button, Dropdown, Menu } from "antd";
 import { highlightedActivity } from "../utility/workoutTypeColor";
-
+import getStage from "../utility/getStage";
+import { DEV } from "../constants/stages";
 /**
  * MapControls component for map view.
  * Renders map mode, tile layer, export, and quick selection dropdown.
@@ -40,6 +41,7 @@ const MapControls = ({
   highlightedActivities,
 }) => {
   // Dropdown menu for Quick Selections (types sorted alphabetically)
+  const stage = getStage();
   const sortedTypes = [...workoutTypes].sort((a, b) => a.localeCompare(b));
   const quickSelectionsMenu = (
     <Menu>
@@ -86,7 +88,7 @@ const MapControls = ({
           textAlign: "left",
           marginBottom: 8,
           display: "flex",
-          gap: 12, // ensures equal spacing between all buttons/dropdowns
+          gap: 12,
           flexWrap: "wrap",
         }}
       >
@@ -119,9 +121,11 @@ const MapControls = ({
         >
           {showTileLayer ? "Hide Background Map" : "Show Background Map"}
         </Button>
-        <Button onClick={handleExportMap} style={{ marginRight: 8 }}>
-          Export Map as PNG
-        </Button>
+        {stage == DEV && (
+          <Button onClick={handleExportMap} style={{ marginRight: 8 }}>
+            Export Map as PNG
+          </Button>
+        )}
       </div>
       {/* Quick Selections Dropdown */}
     </div>
