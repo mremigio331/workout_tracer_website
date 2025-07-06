@@ -124,6 +124,19 @@ const Navbar = () => {
         },
   ];
 
+  // Add Public Users as a separate item next to the user/profile menu
+  const rightMenuItems = [
+    {
+      label: (
+        <Link to="/users" style={{ color: "white", textDecoration: "none" }}>
+          Public Users
+        </Link>
+      ),
+      key: "public-users",
+    },
+    ...items.slice(1), // user/profile or signin menu
+  ];
+
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   return (
@@ -174,7 +187,7 @@ const Navbar = () => {
           onClick={onClick}
           selectedKeys={[current]}
           mode="horizontal"
-          items={items.slice(1)}
+          items={rightMenuItems}
           theme="dark"
           style={{ backgroundColor: "transparent" }}
         />

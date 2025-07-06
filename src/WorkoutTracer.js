@@ -9,6 +9,8 @@ import {
 import Navbar from "./components/Navbar";
 import Home from "./pages/home/Home";
 import UserProfile from "./pages/user/UserProfile";
+import PublicUsers from "./pages/user/PublicUsers";
+import PublicUserTracer from "./pages/home/PublicUserTracer";
 
 const { Header, Content } = Layout;
 
@@ -28,6 +30,8 @@ const PageRoutes = () => {
     <Routes location={location}>
       <Route path="/" element={<Home />} />
       <Route path="/user/profile" element={<UserProfile />} />
+      <Route path="/users" element={<PublicUsers />} />
+      <Route path="/users/:stravaId" element={<PublicUserTracer />} />
     </Routes>
   );
 };

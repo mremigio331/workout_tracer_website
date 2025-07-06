@@ -8,6 +8,8 @@ import ApiProvider from "./provider/ApiProvider";
 import { UserStravaProvider } from "./provider/UserStravaProvider";
 import { UserProfileProvider } from "./provider/UserProfileProvider";
 import { StravaWorkoutsProvider } from "./provider/StravaWorkoutsProvider";
+import { PublicStravaProfileProvider } from "./provider/PublicStravaProfileProvider";
+import { PublicStravaWorkoutsProvider } from "./provider/PublicStravaWorkoutsProvider";
 
 // Add this import at the top if you have a global CSS file (e.g., index.css or App.css)
 // import "./index.css";
@@ -36,7 +38,11 @@ createRoot(document.getElementById("app")).render(
         <UserProfileProvider>
           <UserStravaProvider>
             <StravaWorkoutsProvider>
-              <WorkoutTracer />
+              <PublicStravaProfileProvider>
+                <PublicStravaWorkoutsProvider>
+                  <WorkoutTracer />
+                </PublicStravaWorkoutsProvider>
+              </PublicStravaProfileProvider>
             </StravaWorkoutsProvider>
           </UserStravaProvider>
         </UserProfileProvider>
