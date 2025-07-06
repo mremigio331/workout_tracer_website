@@ -5,9 +5,6 @@ import { apiRequestGet } from "../api/apiRequest";
 import { useApi } from "../provider/ApiProvider";
 
 const useGetStravaProfile = ({ stravaId, enabled = true }) => {
-  // Debug: log on every render
-  console.log("useGetStravaProfile rerender");
-
   const { idToken } = useContext(UserAuthenticationContext);
   const { apiEndpoint, stage } = useApi();
 

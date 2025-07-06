@@ -13,18 +13,14 @@ const fetchAllWorkouts = async (apiEndpoint, idToken) => {
   do {
     let endpoint = `/strava/workouts?limit=${limit}`;
     if (nextToken) endpoint += `&next_token=${encodeURIComponent(nextToken)}`;
-    console.log("Requesting endpoint:", endpoint);
 
     const response = await apiRequestGet(apiEndpoint, endpoint, idToken);
     const data = response.data;
-    console.log("Fetched Strava Workouts:", data);
-    console.log("Next Token:", data.next_token);
 
     allWorkouts = allWorkouts.concat(data.workouts || []);
     prevToken = nextToken;
     nextToken = data.next_token;
 
-    // Guard: break if next_token does not change (prevents infinite loop)
     if (!nextToken || nextToken === prevToken) {
       if (!nextToken) {
         console.log("No new token, finished fetching all workouts.");

@@ -5,9 +5,6 @@ import { apiRequestGet } from "../api/apiRequest";
 import { useApi } from "../provider/ApiProvider";
 
 const useGetStravaProfile = () => {
-  // Debug: log on every render
-  console.log("useGetStravaProfile rerender");
-
   const { idToken } = useContext(UserAuthenticationContext);
   const { apiEndpoint, stage } = useApi();
 
@@ -53,15 +50,13 @@ const useGetStravaProfile = () => {
     }
   }
 
-  console.log("Strava Profile Data:", data);
-
   return {
     stravaProfile: data?.athlete ?? null,
     isStravaFetching: isFetching,
     isStravaError: isError,
     stravaStatus: status,
     stravaRefetch: refetch,
-    stravaError: error ?? null, // error will now be the error message or object thrown in apiRequestGet
+    stravaError: error ?? null,
   };
 };
 

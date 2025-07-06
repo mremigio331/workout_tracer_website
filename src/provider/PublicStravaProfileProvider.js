@@ -45,9 +45,6 @@ export const PublicStravaProfileProvider = ({ children }) => {
       stravaId,
     ],
   );
-
-  console.log("Public Strava Profile Data:", publicStravaProfile);
-
   return (
     <PublicStravaProfileContext.Provider value={value}>
       {children}

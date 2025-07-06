@@ -21,13 +21,15 @@ const Navbar = () => {
   const { stravaProfile } = useStravaProfile();
 
   const stage = getStage();
-  console.log("Current Stage:", stage);
+
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const siteName = useMemo(() => {
+    if (isMobile) return "Home";
     return stage.toLowerCase() != "prod"
       ? `${stage} Workout Tracer`
       : "Workout Tracer";
-  }, [stage]);
+  }, [stage, isMobile]);
 
   // State for avatar image
   const [avatarImg, setAvatarImg] = useState(null);
@@ -41,7 +43,6 @@ const Navbar = () => {
   }, [stravaProfile]);
 
   const onClick = (e) => {
-    console.log("click ", e);
     setCurrent(e.key);
   };
 
@@ -136,8 +137,6 @@ const Navbar = () => {
     },
     ...items.slice(1), // user/profile or signin menu
   ];
-
-  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   return (
     <Layout>

@@ -34,7 +34,6 @@ const UserAuthenticationProvider = ({ children }) => {
 
   const stage = getStage();
   const stageUpper = stage.toUpperCase();
-  console.log("Current Authentication Stage:", stageUpper);
   const cognitoConfig = COGNITO_CONSTANTS[stageUpper];
 
   const cognitoDomain = cognitoConfig.domain;
@@ -42,8 +41,6 @@ const UserAuthenticationProvider = ({ children }) => {
   const redirectUri = cognitoConfig.redirectUri;
   const region = cognitoConfig.region;
   const responseType = "code";
-
-  console.log("Redirect URI:", redirectUri);
 
   if (!cognitoDomain || !clientId || !redirectUri || !region) {
     throw new Error("Missing required Cognito configuration");
@@ -106,11 +103,6 @@ const UserAuthenticationProvider = ({ children }) => {
           secure: true,
           sameSite: "Strict",
         });
-
-        if (stage === DEV) {
-          console.log("idToken:", data.id_token);
-          console.log("accessToken:", data.access_token);
-        }
 
         dispatch({
           type: "SET_AUTH",

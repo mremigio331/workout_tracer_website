@@ -26,9 +26,6 @@ export const ApiProvider = ({ children }) => {
   const stage = getStage();
   const initialEndpoint = endpointMap[stage.toLocaleLowerCase()];
 
-  console.log("API Stage:", stage);
-  console.log("API Endpoint:", initialEndpoint);
-
   const [state, dispatch] = useReducer(apiReducer, {
     apiEndpoint: initialEndpoint,
     stage,

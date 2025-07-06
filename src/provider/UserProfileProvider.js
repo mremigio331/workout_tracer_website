@@ -113,11 +113,6 @@ export const UserProfileProvider = ({ children }) => {
     [state.userProfile, state.isUserFetching, state.isUserError, userRefetch],
   );
 
-  // Debug: log only when state changes
-  useEffect(() => {
-    console.log("User Profile Data:", state.userProfile);
-  }, [state.userProfile]);
-
   return (
     <UserProfileContext.Provider value={value}>
       {children}

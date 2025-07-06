@@ -148,13 +148,6 @@ const StravaProfileCard = ({
   const stageUpper = getStage().toUpperCase();
   const stravaConfig = STRAVA_CONFIGS[stageUpper];
   const stravaAuthUrl = stravaConfig?.OAUTH_URL;
-  console.log("Strava Connect Debug:", {
-    stageUpper,
-    stageUpper,
-    stravaConfig,
-    stravaAuthUrl,
-  });
-
   if (isStravaFetching || isCallbackLoading) {
     return (
       <Card title="Strava Profile">

@@ -12,9 +12,6 @@ const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useContext(UserAuthenticationContext);
 
-  // Debug: log on every render
-  console.log("Home component rerender, isAuthenticated:", isAuthenticated);
-
   return isAuthenticated ? <HomeAuthenticated /> : <HomeUnauthenticated />;
 };
 

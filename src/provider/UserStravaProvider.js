@@ -58,8 +58,6 @@ export const UserStravaProvider = ({ children }) => {
   const isStravaError = useMemo(() => rawIsStravaError, [rawIsStravaError]);
   const stravaRefetch = useMemo(() => rawStravaRefetch, [rawStravaRefetch]);
 
-  console.log("Strava Profile Data:", stravaProfile);
-  // Sync reducer state with hook values
   useEffect(() => {
     if (isStravaFetching) {
       dispatch({ type: "FETCH_START" });

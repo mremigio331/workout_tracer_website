@@ -7,6 +7,7 @@ import {
   Avatar,
   Select,
   DatePicker,
+  Tabs,
 } from "antd";
 import {
   MapContainer,
@@ -98,8 +99,8 @@ function FitMapToPolylines({ polylines, centerLatLng }) {
 const WorkoutTracerDashboard = ({
   stravaProfile,
   stravaWorkouts,
-  isProfileLoading = false,
-  isWorkoutsLoading = false,
+  isProfileLoading,
+  isWorkoutsLoading,
   headerFallback = "User's Workout Tracer",
   stravaId,
 }) => {
@@ -320,7 +321,33 @@ const WorkoutTracerDashboard = ({
 
   // Responsive: detect if mobile (width <= 768px)
   const isMobile = useMediaQuery({ maxWidth: 768 });
-  const [showMobileSection, setShowMobileSection] = useState(null);
+  // Remove old showMobileSection and showMobileControls
+  // Add a single state for cycling mobile panels: "map", "controls", "stats", "workouts"
+  const MOBILE_PANELS = [
+    { key: "map", label: "Map" },
+    { key: "controls", label: "Controls" },
+    { key: "stats", label: "Stats" },
+    { key: "workouts", label: "Workouts" },
+  ];
+  const [mobilePanel, setMobilePanel] = useState("map");
+
+  // Dynamically get window size for mobile layout
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 375,
+    height: typeof window !== "undefined" ? window.innerHeight : 667,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const mapExportRef = React.useRef(null);
 
@@ -362,231 +389,252 @@ const WorkoutTracerDashboard = ({
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Content style={{ padding: 0 }}>
+      {/* Render the navbar outside of Content, so it always appears at the top */}
+      {/* Assume your Navbar component is imported and used at the App level or here if needed */}
+      <Content style={{ padding: 0, marginTop: NAVBAR_HEIGHT }}>
         {isMobile ? (
           // MOBILE LAYOUT
-          <div>
-            {/* Map takes up full viewport height */}
+          <div
+            style={{
+              width: windowSize.width,
+              height: windowSize.height - NAVBAR_HEIGHT,
+              position: "relative",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Tabs at the top, right under the navbar */}
             <div
               style={{
-                width: "100vw",
-                height: "100vh",
-                position: "relative",
-                marginTop: 0,
-              }}
-            >
-              {isLoading ? (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#fff",
-                  }}
-                >
-                  <Spin size="large" tip="Loading map data..." />
-                </div>
-              ) : (
-                <MapContainer
-                  style={{
-                    height: "100%",
-                    width: "100vw",
-                  }}
-                  center={initialMapCenter}
-                  zoom={12}
-                  scrollWheelZoom={true}
-                  zoomControl={false} // disable default top-left zoom control
-                >
-                  <ZoomControl position="bottomright" />{" "}
-                  {/* Add zoom control to bottom right */}
-                  <MapCenterSync center={initialMapCenter} />
-                  <FitMapToPolylines
-                    polylines={polylines}
-                    centerLatLng={centerWorkoutLatLng}
-                  />
-                  {showTileLayer && (
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution="&copy; OpenStreetMap contributors"
-                    />
-                  )}
-                  {mapMode === "heat" && heatmapPoints.length > 0 && (
-                    <HeatmapLayer points={heatmapPoints} />
-                  )}
-                  {mapMode === "lines" &&
-                    polylines.map((line, idx) =>
-                      line.positions.length > 0 ? (
-                        <Polyline
-                          key={line.id || idx}
-                          positions={line.positions}
-                          color={
-                            highlightedActivities.includes(line.id)
-                              ? highlightedActivity
-                              : workoutTypeColor(line.type)
-                          }
-                          weight={3}
-                          highlightedActivities={highlightedActivities}
-                          setHighlightedActivities={setHighlightedActivities}
-                        />
-                      ) : null,
-                    )}
-                </MapContainer>
-              )}
-            </div>
-            {/* Mobile Section Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-around",
-                alignItems: "center",
-                padding: "12px 0",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: 0,
+                zIndex: 1001,
                 background: "#fff",
                 borderBottom: "1px solid #eee",
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
+                width: windowSize.width,
               }}
             >
-              <Button
-                type={showMobileSection === "filters" ? "primary" : "default"}
-                onClick={() =>
-                  setShowMobileSection(
-                    showMobileSection === "filters" ? null : "filters",
-                  )
-                }
-                style={{ flex: 1, margin: "0 4px" }}
-              >
-                Filters & Map Controls
-              </Button>
-              <Button
-                type={showMobileSection === "stats" ? "primary" : "default"}
-                onClick={() =>
-                  setShowMobileSection(
-                    showMobileSection === "stats" ? null : "stats",
-                  )
-                }
-                style={{ flex: 1, margin: "0 4px" }}
-              >
-                Stats
-              </Button>
-              <Button
-                type={showMobileSection === "workouts" ? "primary" : "default"}
-                onClick={() =>
-                  setShowMobileSection(
-                    showMobileSection === "workouts" ? null : "workouts",
-                  )
-                }
-                style={{ flex: 1, margin: "0 4px" }}
-              >
-                Workouts
-              </Button>
-            </div>
-            {/* Mobile Section Content */}
-            <div style={{ padding: 8 }}>
-              {showMobileSection === "filters" && (
-                <>
-                  {/* Search/Filter Bar */}
-                  <div
-                    style={{
-                      margin: "16px 0",
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 8,
-                    }}
-                  >
-                    <Select
-                      allowClear
-                      placeholder="Filter by Type"
-                      style={{ minWidth: 120, marginRight: 8 }}
-                      value={searchType}
-                      onChange={setSearchType}
-                      options={workoutTypes.map((type) => ({
-                        value: type,
-                        label: type,
-                      }))}
-                    />
-                    <RangePicker
-                      style={{ minWidth: 160, marginRight: 8 }}
-                      value={searchDateRange}
-                      onChange={setSearchDateRange}
-                      allowEmpty={[true, true]}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      padding: 8,
-                      background: "#fff",
-                      borderRadius: 8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <MapControls
-                      mapMode={mapMode}
-                      setMapMode={setMapMode}
-                      isMobile={isMobile}
-                      showTileLayer={showTileLayer}
-                      setShowTileLayer={setShowTileLayer}
-                      handleExportMap={handleExportMap}
-                      allSelected={allSelected}
-                      handleSelectAll={handleSelectAll}
-                      handleDeselectAll={handleDeselectAll}
-                      workoutTypes={workoutTypes}
-                      typeAllSelected={typeAllSelected}
-                      handleSelectAllByType={handleSelectAllByType}
-                      handleDeselectAllByType={handleDeselectAllByType}
-                      workoutTypeColor={workoutTypeColor}
-                      highlightedActivities={highlightedActivities}
-                    />
-                  </div>
-                </>
-              )}
-              {showMobileSection === "stats" &&
-                (isLoading ? (
-                  <div style={{ textAlign: "center", margin: "32px 0" }}>
-                    <Spin size="large" tip="Loading workouts..." />
-                  </div>
-                ) : (
-                  <WorkoutStats
-                    isStravaWorkoutFetching={isStravaWorkoutFetching}
-                    stravaWorkouts={stravaWorkouts}
-                    workoutTypeStats={workoutTypeStats}
-                    workoutTypeColor={workoutTypeColor}
-                  />
-                ))}
-              {showMobileSection === "workouts" &&
-                (isLoading ? (
-                  <div style={{ textAlign: "center", margin: "32px 0" }}>
-                    <Spin size="large" tip="Loading workouts..." />
-                  </div>
-                ) : (
-                  <>
-                    <WorkoutCards
-                      isStravaWorkoutFetching={isStravaWorkoutFetching}
-                      stravaWorkouts={stravaWorkouts}
-                      filteredWorkouts={filteredWorkouts}
-                      paginatedWorkouts={paginatedWorkouts}
-                      currentPage={currentPage}
-                      setCurrentPage={setCurrentPage}
-                      totalPages={totalPages}
-                      includedIds={includedIds}
-                      handleCheckboxChange={handleCheckboxChange}
-                      showWorkoutModal={showWorkoutModal}
-                      modalVisible={modalVisible}
-                      selectedWorkout={selectedWorkout}
-                      handleModalClose={handleModalClose}
-                      centerOnWorkout={handleCenterOnWorkout}
-                      highlightedActivities={highlightedActivities}
-                      setHighlightedActivities={setHighlightedActivities}
-                    />
-                  </>
-                ))}
-              <WorkoutDetailsModal
-                open={modalVisible}
-                workout={selectedWorkout}
-                onCancel={handleModalClose}
+              <Tabs
+                activeKey={mobilePanel}
+                onChange={setMobilePanel}
+                centered
+                tabBarGutter={8}
+                items={MOBILE_PANELS.map((panel) => ({
+                  key: panel.key,
+                  label: panel.label,
+                }))}
               />
+            </div>
+
+            {/* Panels */}
+            <div
+              style={{
+                width: windowSize.width,
+                height: windowSize.height - NAVBAR_HEIGHT - 48, // 48px is approx Tabs height
+                position: "absolute",
+                top: 48,
+                left: 0,
+                overflowY: "auto", // <-- allow vertical scrolling
+                WebkitOverflowScrolling: "touch", // for iOS smooth scroll
+              }}
+            >
+              {mobilePanel === "map" && (
+                <div
+                  style={{
+                    width: "100vw",
+                    height: "100vh",
+                    position: "relative",
+                    marginTop: 0,
+                  }}
+                >
+                  {isLoading ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#fff",
+                      }}
+                    >
+                      <Spin size="large" tip="Loading map data..." />
+                    </div>
+                  ) : (
+                    <MapContainer
+                      style={{
+                        height: "100%",
+                        width: "100vw",
+                      }}
+                      center={initialMapCenter}
+                      zoom={12}
+                      scrollWheelZoom={true}
+                      zoomControl={false}
+                    >
+                      <ZoomControl position="bottomright" />
+                      <MapCenterSync center={initialMapCenter} />
+                      <FitMapToPolylines
+                        polylines={polylines}
+                        centerLatLng={centerWorkoutLatLng}
+                      />
+                      {showTileLayer && (
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution="&copy; OpenStreetMap contributors"
+                        />
+                      )}
+                      {mapMode === "heat" && heatmapPoints.length > 0 && (
+                        <HeatmapLayer points={heatmapPoints} />
+                      )}
+                      {mapMode === "lines" &&
+                        polylines.map((line, idx) =>
+                          line.positions.length > 0 ? (
+                            <Polyline
+                              key={line.id || idx}
+                              positions={line.positions}
+                              color={
+                                highlightedActivities.includes(line.id)
+                                  ? highlightedActivity
+                                  : workoutTypeColor(line.type)
+                              }
+                              weight={3}
+                              highlightedActivities={highlightedActivities}
+                              setHighlightedActivities={
+                                setHighlightedActivities
+                              }
+                            />
+                          ) : null,
+                        )}
+                    </MapContainer>
+                  )}
+                </div>
+              )}
+
+              {mobilePanel === "controls" && (
+                <div
+                  style={{
+                    width: "100vw",
+                    height: "100vh",
+                    background: "#fff",
+                    overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    paddingBottom: 56, // leave space for tabs
+                  }}
+                >
+                  <div style={{ padding: 16 }}>
+                    {/* Controls content (filters, map controls, etc) */}
+                    <div
+                      style={{
+                        margin: "16px 0",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                      }}
+                    >
+                      <Select
+                        allowClear
+                        placeholder="Filter by Type"
+                        style={{ minWidth: 120, marginRight: 8 }}
+                        value={searchType}
+                        onChange={setSearchType}
+                        options={workoutTypes.map((type) => ({
+                          value: type,
+                          label: type,
+                        }))}
+                      />
+                      <RangePicker
+                        style={{ minWidth: 160, marginRight: 8 }}
+                        value={searchDateRange}
+                        onChange={setSearchDateRange}
+                        allowEmpty={[true, true]}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        padding: 8,
+                        background: "#fff",
+                        borderRadius: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <MapControls
+                        mapMode={mapMode}
+                        setMapMode={setMapMode}
+                        isMobile={isMobile}
+                        showTileLayer={showTileLayer}
+                        setShowTileLayer={setShowTileLayer}
+                        handleExportMap={handleExportMap}
+                        allSelected={allSelected}
+                        handleSelectAll={handleSelectAll}
+                        handleDeselectAll={handleDeselectAll}
+                        workoutTypes={workoutTypes}
+                        typeAllSelected={typeAllSelected}
+                        handleSelectAllByType={handleSelectAllByType}
+                        handleDeselectAllByType={handleDeselectAllByType}
+                        workoutTypeColor={workoutTypeColor}
+                        highlightedActivities={highlightedActivities}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {mobilePanel === "stats" && (
+                <div style={{ padding: 8, paddingBottom: 56 }}>
+                  {isLoading ? (
+                    <div style={{ textAlign: "center", margin: "32px 0" }}>
+                      <Spin size="large" tip="Loading workouts..." />
+                    </div>
+                  ) : (
+                    <WorkoutStats
+                      isStravaWorkoutFetching={isWorkoutsLoading}
+                      stravaWorkouts={stravaWorkouts}
+                      workoutTypeStats={workoutTypeStats}
+                      workoutTypeColor={workoutTypeColor}
+                    />
+                  )}
+                </div>
+              )}
+
+              {mobilePanel === "workouts" && (
+                <div style={{ padding: 8, paddingBottom: 56 }}>
+                  {isLoading ? (
+                    <div style={{ textAlign: "center", margin: "32px 0" }}>
+                      <Spin size="large" tip="Loading workouts..." />
+                    </div>
+                  ) : (
+                    <>
+                      <WorkoutCards
+                        isStravaWorkoutFetching={isWorkoutsLoading}
+                        stravaWorkouts={stravaWorkouts}
+                        filteredWorkouts={filteredWorkouts}
+                        paginatedWorkouts={paginatedWorkouts}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                        totalPages={totalPages}
+                        includedIds={includedIds}
+                        handleCheckboxChange={handleCheckboxChange}
+                        showWorkoutModal={showWorkoutModal}
+                        modalVisible={modalVisible}
+                        selectedWorkout={selectedWorkout}
+                        handleModalClose={handleModalClose}
+                        centerOnWorkout={handleCenterOnWorkout}
+                        highlightedActivities={highlightedActivities}
+                        setHighlightedActivities={setHighlightedActivities}
+                      />
+                    </>
+                  )}
+                  <WorkoutDetailsModal
+                    open={modalVisible}
+                    workout={selectedWorkout}
+                    onCancel={handleModalClose}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -836,13 +884,13 @@ const WorkoutTracerDashboard = ({
                   ) : (
                     <>
                       <WorkoutStats
-                        isStravaWorkoutFetching={isLoading}
+                        isStravaWorkoutFetching={isWorkoutsLoading}
                         stravaWorkouts={stravaWorkouts}
                         workoutTypeStats={workoutTypeStats}
                         workoutTypeColor={workoutTypeColor}
                       />
                       <WorkoutCards
-                        isStravaWorkoutFetching={isLoading}
+                        isStravaWorkoutFetching={isWorkoutsLoading}
                         stravaWorkouts={stravaWorkouts}
                         filteredWorkouts={filteredWorkouts}
                         paginatedWorkouts={paginatedWorkouts}

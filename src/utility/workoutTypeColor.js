@@ -1,107 +1,107 @@
 const workoutTypeColor = (type) => {
   switch (type) {
     case "AlpineSki":
-      return "#4682B4"; // Steel Blue – seasonal with GPS
+      return "#2a5d8f"; // Darker Steel Blue
     case "BackcountrySki":
-      return "#6A5ACD"; // Slate Blue – seasonal with GPS
+      return "#483d8b"; // Dark Slate Blue
     case "Badminton":
-      return "#E0E0E0"; // Light Gray – indoor/racket sport
+      return "#b0b0b0"; // Medium Gray
     case "Canoeing":
-      return "#66CDAA"; // Medium Aquamarine – moderate GPS
+      return "#228b87"; // Strong Teal
     case "Crossfit":
-      return "#DCDCDC"; // Gainsboro – indoor gym
+      return "#a9a9a9"; // Dark Gray
     case "EBikeRide":
-      return "#FABE28"; // Bright Yellow – very popular and GPS-heavy
+      return "#e6b800"; // Strong Gold
     case "EMountainBikeRide":
-      return "#FFD700"; // Gold – popular e-mtb, GPS
+      return "#b8860b"; // Dark Goldenrod
     case "Elliptical":
-      return "#E6E6E6"; // Light Gray – gym cardio
+      return "#bdbdbd"; // Medium Gray
     case "Football":
-      return "#CCCCCC"; // Soccer – semi-popular, limited GPS
+      return "#888888"; // Medium Gray
     case "Golf":
-      return "#D3D3D3"; // Light Gray – low GPS, low visibility
+      return "#969696"; // Medium Gray
     case "GravelRide":
-      return "#FF7F0E"; // Vivid Orange – fast-growing, GPS-heavy
+      return "#ff6600"; // Strong Orange
     case "Handcycle":
-      return "#F0F0F0"; // Very Light Gray – lower volume, may lack GPS
+      return "#bdbdbd"; // Medium Gray
     case "Hike":
-      return "#FF8C00"; // Dark Orange – very popular and GPS-rich, stands out from vegetation
+      return "#d2691e"; // Chocolate
     case "HIIT":
-      return "#DADADA"; // Light Gray – indoor, grouped with Crossfit
+      return "#a9a9a9"; // Dark Gray
     case "IceSkate":
-      return "#B0C4DE"; // Light Steel Blue – niche, seasonal
+      return "#4682b4"; // Steel Blue
     case "InlineSkate":
-      return "#A0522D"; // Sienna – mid-tier popularity, GPS-capable
+      return "#8b4513"; // Saddle Brown
     case "Kayaking":
-      return "#00CED1"; // Dark Turquoise – active water GPS sport
+      return "#008080"; // Teal
     case "Kitesurf":
-      return "#BA55D3"; // Medium Orchid – niche water sport
+      return "#8a2be2"; // Blue Violet
     case "MountainBikeRide":
-      return "#8B4513"; // Saddle Brown – highly active GPS terrain
+      return "#654321"; // Dark Brown
     case "NordicSki":
-      return "#6495ED"; // Cornflower Blue – seasonal with GPS
+      return "#27408b"; // Dark Blue
     case "Pickleball":
-      return "#DCDCDC"; // Matches Crossfit/indoor tones
+      return "#b0b0b0"; // Medium Gray
     case "Pilates":
-      return "#E0E0E0"; // Indoor stretching – similar to Yoga
+      return "#b0b0b0"; // Medium Gray
     case "Racquetball":
-      return "#D3D3D3"; // Grouped with squash, table tennis
+      return "#a9a9a9"; // Dark Gray
     case "Ride":
-      return "#4363D8"; // Strong Blue – one of the most popular sports
+      return "#003399"; // Strong Blue
     case "RockClimb":
-      return "#A9A9A9"; // Dark Gray – indoor/outdoor mix
+      return "#696969"; // Dim Gray
     case "RollerSki":
-      return "#D2691E"; // Chocolate – niche with GPS
+      return "#a0522d"; // Sienna
     case "Rowing":
-      return "#228B22"; // Forest Green – water sport with GPS
+      return "#006400"; // Dark Green
     case "Run":
-      return "#E6194B"; // Vivid Red – most popular Strava sport
+      return "#c21807"; // Strong Red
     case "Sail":
-      return "#87CEFA"; // Light Sky Blue – water GPS sport, less popular
+      return "#4682b4"; // Steel Blue
     case "Skateboard":
-      return "#DDDDDD"; // Soft Gray – low GPS, less common
+      return "#888888"; // Medium Gray
     case "Snowboard":
-      return "#2F4F4F"; // Dark Slate Gray – seasonal, GPS-capable
+      return "#222222"; // Very Dark Gray
     case "Snowshoe":
-      return "#EEEEEE"; // Very Pale Gray – uncommon and low GPS
+      return "#b0b0b0"; // Medium Gray
     case "Squash":
-      return "#D3D3D3"; // Racket sport, grouped with others
+      return "#a9a9a9"; // Dark Gray
     case "StairStepper":
-      return "#E8E8E8"; // Indoor cardio – light variant
+      return "#b0b0b0"; // Medium Gray
     case "StandUpPaddling":
-      return "#008080"; // Teal – moderate popularity, GPS supported
+      return "#006666"; // Deep Teal
     case "Surfing":
-      return "#20B2AA"; // Light Sea Green – ocean GPS sport
+      return "#008080"; // Teal
     case "Swim":
-      return "#42D4F4"; // Bright Aqua – highly popular, GPS-enabled (open water)
+      return "#0099cc"; // Strong Blue
     case "TableTennis":
-      return "#CCCCCC"; // Indoor sport, same group
+      return "#888888"; // Medium Gray
     case "Tennis":
-      return "#C0C0C0"; // Indoor/outdoor sport – less GPS
+      return "#888888"; // Medium Gray
     case "TrailRun":
-      return "#FF1493"; // Deep Pink – growing segment, GPS-rich
+      return "#c71585"; // Medium Violet Red
     case "Velomobile":
-      return "#D8BFD8"; // Thistle – niche, low volume
+      return "#8b008b"; // Dark Magenta
     case "VirtualRide":
-      return "#FFDAB9"; // Peach – virtual, lower map priority
+      return "#ff9900"; // Strong Orange
     case "VirtualRow":
-      return "#F5DEB3"; // Wheat – grouped with other virtuals
+      return "#b8860b"; // Dark Goldenrod
     case "VirtualRun":
-      return "#FFE4E1"; // Misty Rose – virtual, low GPS
+      return "#c71585"; // Medium Violet Red
     case "Walk":
-      return "#911EB4"; // Strong Purple – high popularity, GPS available
+      return "#6a1b9a"; // Deep Purple
     case "WeightTraining":
-      return "#E0E0E0"; // Indoor gym – low map relevance
+      return "#888888"; // Medium Gray
     case "Wheelchair":
-      return "#FAFAFA"; // Almost White – low usage, often no GPS
+      return "#555555"; // Dark Gray
     case "Windsurf":
-      return "#5F9EA0"; // Cadet Blue – seasonal with GPS
+      return "#4682b4"; // Steel Blue
     case "Workout":
-      return "#E0E0E0"; // Light Gray – no GPS, low map relevance
+      return "#888888"; // Medium Gray
     case "Yoga":
-      return "#F0F8FF"; // Alice Blue – calm indoor activity
+      return "#4682b4"; // Steel Blue
     default:
-      return "#888888"; // Default muted gray
+      return "#444444"; // Default dark gray
   }
 };
 
