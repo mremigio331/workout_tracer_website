@@ -14,7 +14,7 @@ const useGetUserProfile = (enabled = true) => {
     [enabled, idToken],
   );
 
-  const { data, isFetching, isError, status, error } = useQuery({
+  const { data, isFetching, isError, status, error, refetch } = useQuery({
     queryKey: ["userProfile"],
     queryFn: () => apiRequestGet(apiEndpoint, "/user/profile", idToken),
     enabled: isEnabled,
@@ -37,6 +37,7 @@ const useGetUserProfile = (enabled = true) => {
     isUserError: isError,
     userStatus: status,
     userError: error,
+    userRefetch: refetch,
   };
 };
 

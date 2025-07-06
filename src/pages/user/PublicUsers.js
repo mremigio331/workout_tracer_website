@@ -10,10 +10,12 @@ const PublicUsers = () => {
   const { allUserProfiles, isAllUserFetching, isAllUserError } =
     useGetPublicUsers();
 
-  // Sort alphabetically by name
+  // Sort alphabetically by first and last name
   const sortedProfiles = Array.isArray(allUserProfiles)
     ? [...allUserProfiles].sort((a, b) =>
-        (a.name || "").localeCompare(b.name || ""),
+        `${a.firstname || ""} ${a.lastname || ""}`.localeCompare(
+          `${b.firstname || ""} ${b.lastname || ""}`,
+        ),
       )
     : [];
 
@@ -46,8 +48,8 @@ const PublicUsers = () => {
               >
                 {profile.firstname
                   ? profile.firstname[0]
-                  : profile.name
-                    ? profile.name[0]
+                  : profile.lastname
+                    ? profile.lastname[0]
                     : "?"}
               </Avatar>
               <div style={{ flex: 1 }}>
@@ -56,19 +58,23 @@ const PublicUsers = () => {
                     style={{ fontSize: 20, fontWeight: 600 }}
                     onClick={() => navigate(`/users/${profile.strava_id}`)}
                   >
-                    {profile.name}
+                    {(profile.firstname || "") + " " + (profile.lastname || "")}
                   </Link>
                 </div>
-                <div>
-                  <Text type="secondary">
-                    {profile.firstname || ""} {profile.lastname || ""}
-                  </Text>
-                </div>
-                {profile.city && (
+                {/* Location: city > state > country > nothing */}
+                {profile.city ? (
                   <div>
                     <Text type="secondary">{profile.city}</Text>
                   </div>
-                )}
+                ) : profile.state ? (
+                  <div>
+                    <Text type="secondary">{profile.state}</Text>
+                  </div>
+                ) : profile.country ? (
+                  <div>
+                    <Text type="secondary">{profile.country}</Text>
+                  </div>
+                ) : null}
               </div>
             </Card>
           ))}

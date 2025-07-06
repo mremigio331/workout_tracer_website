@@ -57,6 +57,7 @@ export const UserProfileProvider = ({ children }) => {
     userProfile: rawUserProfile,
     isUserFetching: rawIsUserFetching,
     isUserError: rawIsUserError,
+    userRefetch,
   } = useGetUserProfile(shouldFetchProfile);
 
   // Refetch on route change or token change
@@ -107,8 +108,9 @@ export const UserProfileProvider = ({ children }) => {
       isUserError: state.isUserError,
       setUserProfile,
       clearProfile,
+      userRefetch,
     }),
-    [state.userProfile, state.isUserFetching, state.isUserError],
+    [state.userProfile, state.isUserFetching, state.isUserError, userRefetch],
   );
 
   // Debug: log only when state changes

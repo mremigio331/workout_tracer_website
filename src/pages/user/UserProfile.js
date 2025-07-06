@@ -1,53 +1,139 @@
 import React, { useEffect, useContext, useState } from "react";
 import { useUserProfile } from "../../provider/UserProfileProvider";
 import { useStravaProfile } from "../../provider/UserStravaProvider";
-import { Card, Row, Col, Avatar, Typography, Spin, Alert, Button } from "antd";
+import {
+  Card,
+  Row,
+  Col,
+  Avatar,
+  Typography,
+  Spin,
+  Alert,
+  Button,
+  Switch,
+  message,
+} from "antd";
 import { STRAVA_CONFIGS } from "../../configs/stravaConfig";
 import usePutStravaCallback from "../../hooks/usePutStravaCallback";
+import usePutProfile from "../../hooks/usePutProfile";
 import { UserAuthenticationContext } from "../../provider/UserAuthenticationProvider";
 import getStage from "../../utility/getStage";
 
 const { Title, Text } = Typography;
 
-const UserProfileCard = ({ userProfile, isUserFetching }) => (
-  <Card
-    title="User Profile"
-    extra={
-      <Avatar
-        size={64}
-        src={
-          userProfile?.avatar ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.name || "User")}`
-        }
-      />
-    }
-  >
-    {isUserFetching ? (
-      <Spin />
-    ) : userProfile ? (
-      <>
-        <Title level={4}>{userProfile.name || "N/A"}</Title>
-        <Text type="secondary">{userProfile.email || "N/A"}</Text>
-        <br />
-        {userProfile.public_profile !== undefined ? (
-          userProfile.public_profile ? (
-            <Text style={{ color: "green" }}>
-              <b>Public Profile</b>
-            </Text>
+const UserProfileCard = ({
+  userProfile,
+  isUserFetching,
+  onTogglePublic,
+  updatingPublic,
+  onNameSave,
+  nameEditLoading,
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [nameValue, setNameValue] = useState(userProfile?.name || "");
+
+  useEffect(() => {
+    setNameValue(userProfile?.name || "");
+  }, [userProfile?.name]);
+
+  return (
+    <Card
+      title="User Profile"
+      extra={
+        <Avatar
+          size={64}
+          src={
+            userProfile?.avatar ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.name || "User")}`
+          }
+        />
+      }
+    >
+      {isUserFetching ? (
+        <Spin />
+      ) : userProfile ? (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {editing ? (
+              <>
+                <input
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  style={{ fontSize: 18, padding: 4, marginRight: 8 }}
+                  disabled={nameEditLoading}
+                />
+                <Button
+                  size="small"
+                  type="primary"
+                  loading={nameEditLoading}
+                  onClick={async () => {
+                    if (nameValue && nameValue !== userProfile.name) {
+                      await onNameSave(nameValue);
+                    }
+                    setEditing(false);
+                  }}
+                  style={{ marginRight: 4 }}
+                >
+                  Save
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEditing(false);
+                    setNameValue(userProfile.name || "");
+                  }}
+                  disabled={nameEditLoading}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Title level={4} style={{ margin: 0 }}>
+                  {userProfile.name || "N/A"}
+                </Title>
+                <Button
+                  size="small"
+                  onClick={() => setEditing(true)}
+                  style={{ marginLeft: 8 }}
+                >
+                  Edit
+                </Button>
+              </>
+            )}
+          </div>
+          <Text type="secondary">{userProfile.email || "N/A"}</Text>
+          <br />
+          {userProfile.public_profile !== undefined ? (
+            <>
+              <Switch
+                checked={userProfile.public_profile}
+                loading={updatingPublic}
+                onChange={onTogglePublic}
+                checkedChildren="Public"
+                unCheckedChildren="Private"
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={{ color: userProfile.public_profile ? "green" : "red" }}
+              >
+                <b>
+                  {userProfile.public_profile
+                    ? "Public Profile"
+                    : "Private Profile"}
+                </b>
+              </Text>
+            </>
           ) : (
-            <Text style={{ color: "red" }}>
-              <b>Private Profile</b>
-            </Text>
-          )
-        ) : (
-          <Text>N/A</Text>
-        )}
-      </>
-    ) : (
-      <Alert message="No user profile data." type="info" />
-    )}
-  </Card>
-);
+            <Text>N/A</Text>
+          )}
+        </>
+      ) : (
+        <Alert message="No user profile data." type="info" />
+      )}
+    </Card>
+  );
+};
 
 const StravaProfileCard = ({
   stravaProfile,
@@ -157,7 +243,7 @@ const StravaProfileCard = ({
 };
 
 const UserProfile = () => {
-  const { userProfile, isUserFetching } = useUserProfile();
+  const { userProfile, isUserFetching, userRefetch } = useUserProfile();
   const {
     stravaProfile,
     isStravaFetching,
@@ -166,11 +252,16 @@ const UserProfile = () => {
   } = useStravaProfile();
   const { putStravaCallbackAsync, status: stravaCallbackStatus } =
     usePutStravaCallback();
+  const {
+    updateUserProfileAsync,
+    updateUserProfileLoading,
+    updateUserProfileError,
+  } = usePutProfile();
   const { idToken } = useContext(UserAuthenticationContext);
 
   const [isCallbackLoading, setIsCallbackLoading] = useState(false);
   const [callbackError, setCallbackError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [nameEditLoading, setNameEditLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -199,6 +290,36 @@ const UserProfile = () => {
     }
   }, [putStravaCallbackAsync, idToken, refetchStravaProfile]);
 
+  // Handle toggle public/private
+  const handleTogglePublic = async (checked) => {
+    try {
+      await updateUserProfileAsync({ public_profile: checked });
+      message.success(`Profile is now ${checked ? "public" : "private"}.`);
+      // Force a repull of the user profile
+      if (typeof userRefetch === "function") {
+        userRefetch();
+      }
+    } catch (err) {
+      message.error("Failed to update profile privacy.");
+    }
+  };
+
+  // Handle name save
+  const handleNameSave = async (newName) => {
+    setNameEditLoading(true);
+    try {
+      await updateUserProfileAsync({ name: newName });
+      message.success("Name updated!");
+      if (typeof userRefetch === "function") {
+        userRefetch();
+      }
+    } catch (err) {
+      message.error("Failed to update name.");
+    } finally {
+      setNameEditLoading(false);
+    }
+  };
+
   const stage = getStage();
 
   return (
@@ -207,7 +328,20 @@ const UserProfile = () => {
         <UserProfileCard
           userProfile={userProfile}
           isUserFetching={isUserFetching}
+          onTogglePublic={handleTogglePublic}
+          updatingPublic={updateUserProfileLoading}
+          onNameSave={handleNameSave}
+          nameEditLoading={nameEditLoading}
         />
+        {updateUserProfileError && (
+          <Alert
+            message="Failed to update profile privacy."
+            description={updateUserProfileError.message}
+            type="error"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
       </Col>
       <Col xs={24} md={10}>
         <StravaProfileCard
