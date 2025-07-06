@@ -30,7 +30,7 @@ const WorkoutStats = ({
   return (
     <div style={{ margin: "32px 0" }}>
       <Title level={4} style={{ marginBottom: 16 }}>
-        Workout Stats
+        Workout Stats (Total: {stravaWorkouts.length} workouts)
       </Title>
       <Row gutter={[16, 16]}>
         {Object.entries(workoutTypeStats)
