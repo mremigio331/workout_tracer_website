@@ -9,14 +9,13 @@ import { STAGING, PROD, DEV } from "../constants/stages";
 import getStage from "./getStage";
 
 const getApi = () => {
- 
-  const stage = getStage()
+  const stage = getStage();
 
   console.log("getApi stage:", stage);
 
-  if (stage == PROD ) {
+  if (stage == PROD) {
     return PROD_API_ENDPOINT;
-  } else if (stage == STAGING ) {
+  } else if (stage == STAGING) {
     return STAGING_API_ENDPOINT;
   }
 

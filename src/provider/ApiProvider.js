@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useMemo, useContext } from "react";
-import getStage from "../utility/getApiEndpoint";
+import getStage from "../utility/getStage";
 import {
   PROD_API_ENDPOINT,
   STAGING_API_ENDPOINT,
@@ -24,7 +24,10 @@ const apiReducer = (state, action) => {
 
 export const ApiProvider = ({ children }) => {
   const stage = getStage();
-  const initialEndpoint = endpointMap[stage.toLocaleLowerCase()] ;
+  const initialEndpoint = endpointMap[stage.toLocaleLowerCase()];
+
+  console.log("API Stage:", stage);
+  console.log("API Endpoint:", initialEndpoint);
 
   const [state, dispatch] = useReducer(apiReducer, {
     apiEndpoint: initialEndpoint,

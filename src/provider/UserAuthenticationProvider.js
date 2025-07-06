@@ -119,6 +119,15 @@ const UserAuthenticationProvider = ({ children }) => {
             accessToken: data.access_token,
           },
         });
+
+        // Remove the code param from the URL after successful login
+        const url = new URL(window.location.href);
+        url.searchParams.delete("code");
+        window.history.replaceState(
+          {},
+          document.title,
+          url.pathname + url.search,
+        );
       } catch (error) {
         if (stage === DEV) {
           console.error("Error fetching user session:", error);
