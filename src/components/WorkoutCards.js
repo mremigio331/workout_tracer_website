@@ -142,6 +142,11 @@ const WorkoutCards = ({
                   size="small"
                   onClick={() => centerOnWorkout && centerOnWorkout(workout)}
                   style={{ marginLeft: 0 }}
+                  disabled={
+                    !workout.map ||
+                    !workout.map.summary_polyline ||
+                    workout.map.summary_polyline.length === 0
+                  }
                 >
                   Center on Map
                 </Button>
