@@ -123,6 +123,13 @@ const UserProfileCard = ({
                     : "Private Profile"}
                 </b>
               </Text>
+              <div style={{ marginTop: 16 }}>
+                <Alert
+                  message="If you want others to see your Workout Tracer, make sure your Strava activities' maps are set to public. Only public activity geodata will be shown to others."
+                  type="info"
+                  showIcon
+                />
+              </div>
             </>
           ) : (
             <Text>N/A</Text>

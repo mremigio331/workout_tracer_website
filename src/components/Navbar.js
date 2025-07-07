@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { UserAuthenticationContext } from "../provider/UserAuthenticationProvider";
 import { useStravaProfile } from "../provider/UserStravaProvider";
 import getStage from "../utility/getStage";
-import logo from "../assets/workout_tracer.png"; // Import your logo
+import logo from "../assets/workout_tracer.png";
 import { useMediaQuery } from "react-responsive";
 const { Header } = Layout;
 
@@ -25,7 +25,7 @@ const Navbar = () => {
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const siteName = useMemo(() => {
-    if (isMobile) return "Home";
+    if (isMobile) return "Workout Tracer";
     return stage.toLowerCase() != "prod"
       ? `${stage} Workout Tracer`
       : "Workout Tracer";
@@ -125,73 +125,64 @@ const Navbar = () => {
         },
   ];
 
-  // Add Public Users as a separate item next to the user/profile menu
-  const rightMenuItems = [
-    {
-      label: (
-        <Link to="/users" style={{ color: "white", textDecoration: "none" }}>
-          Public Users
-        </Link>
-      ),
-      key: "public-users",
-    },
-    ...items.slice(1), // user/profile or signin menu
-  ];
+  // Only show user/profile or signin menu, no Public Users link
+  const rightMenuItems = [...items.slice(1)];
 
   return (
-    <Layout>
-      <Header
+    <Header
+      style={{
+        position: "fixed",
+        zIndex: 1001,
+        width: "100%",
+        top: 0,
+        left: 0,
+        backgroundColor: "#001529",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+      }}
+    >
+      <div
         style={{
-          position: "fixed",
-          zIndex: 1,
-          width: "100%",
-          backgroundColor: "#001529",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          backgroundColor: "transparent",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: "transparent",
-          }}
-        >
-          <Link to="/" style={{ display: "flex", alignItems: "center" }}>
-            <img
-              src={logo}
-              alt="Logo"
-              style={{
-                height: 36,
-                marginRight: 12,
-                display: "inline-block",
-                verticalAlign: "middle",
-              }}
-            />
-            <span
-              style={{
-                color: "white",
-                fontSize: isMobile ? "15px" : "20px",
-                fontWeight: "bold",
-                backgroundColor: "transparent",
-                verticalAlign: "middle",
-              }}
-            >
-              {siteName}
-            </span>
-          </Link>
-        </div>
-        <Menu
-          onClick={onClick}
-          selectedKeys={[current]}
-          mode="horizontal"
-          items={rightMenuItems}
-          theme="dark"
-          style={{ backgroundColor: "transparent" }}
-        />
-      </Header>
-    </Layout>
+        <Link to="/" style={{ display: "flex", alignItems: "center" }}>
+          <img
+            src={logo}
+            alt="Logo"
+            style={{
+              height: 36,
+              marginRight: 12,
+              display: "inline-block",
+              verticalAlign: "middle",
+            }}
+          />
+          <span
+            style={{
+              color: "white",
+              fontSize: isMobile ? "15px" : "20px",
+              fontWeight: "bold",
+              backgroundColor: "transparent",
+              verticalAlign: "middle",
+            }}
+          >
+            {siteName}
+          </span>
+        </Link>
+      </div>
+      <Menu
+        onClick={onClick}
+        selectedKeys={[current]}
+        mode="horizontal"
+        items={rightMenuItems}
+        theme="dark"
+        style={{ backgroundColor: "transparent" }}
+      />
+    </Header>
   );
 };
 
