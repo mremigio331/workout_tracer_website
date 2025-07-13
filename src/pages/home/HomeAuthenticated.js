@@ -1,6 +1,6 @@
 import React, { useContext, useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Typography, Button, Card, Row, Col } from "antd";
+import { Typography, Button, Spin, Row, Col } from "antd";
 import { useMediaQuery } from "react-responsive";
 import desktopExample from "../../assets/dashboard_desktop.png";
 import mobileExample from "../../assets/dashboard_mobile.png";
@@ -15,6 +15,10 @@ const { Title, Paragraph } = Typography;
 const HomeAuthenticated = () => {
   const { stravaWorkouts, isStravaWorkoutFetching } = useStravaWorkouts();
   const { stravaProfile, isStravaFetching } = useStravaProfile();
+
+  if (isStravaFetching) {
+    return <Spin tip="Loading Strava Profile..." style={{ marginTop: 24 }} />;
+  }
 
   if (!stravaProfile) {
     return <NoStravaProfile />;

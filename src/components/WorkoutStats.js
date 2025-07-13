@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography, Row, Col, Card } from "antd";
-
+import { useUserProfile } from "../provider/UserProfileProvider";
 const { Title } = Typography;
 
 /**
@@ -26,6 +26,16 @@ const WorkoutStats = ({
   ) {
     return null;
   }
+  const { userProfile } = useUserProfile();
+  const distanceUnit = userProfile?.distance_unit || "Imperial";
+  const distanceLabel = distanceUnit === "Imperial" ? "miles" : "km";
+  const elevationLabel = distanceUnit === "Imperial" ? "ft" : "m";
+  const convertDistance = (km) =>
+    distanceUnit === "Imperial" ? (km * 0.621371).toFixed(2) : km.toFixed(2);
+  const convertElevation = (meters) =>
+    distanceUnit === "Imperial"
+      ? (meters * 3.28084).toFixed(0)
+      : meters.toFixed(0);
 
   return (
     <div style={{ margin: "32px 0" }}>
@@ -54,13 +64,13 @@ const WorkoutStats = ({
                 {stats.totalDistance > 0 && (
                   <p style={{ fontSize: 16 }}>
                     <b>Total Distance:</b>{" "}
-                    {`${(stats.totalDistance / 1000).toFixed(2)} km`}
+                    {`${convertDistance(stats.totalDistance / 1000)} ${distanceLabel}`}
                   </p>
                 )}
                 {stats.totalElevation > 0 && (
                   <p style={{ fontSize: 16 }}>
                     <b>Total Elevation:</b>{" "}
-                    {`${stats.totalElevation.toFixed(0)} m`}
+                    {`${convertElevation(stats.totalElevation)} ${elevationLabel}`}
                   </p>
                 )}
                 {stats.totalKj > 0 && (

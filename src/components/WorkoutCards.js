@@ -11,6 +11,7 @@ import {
   Input,
 } from "antd";
 import workoutTypeColor from "../utility/workoutTypeColor";
+import { useUserProfile } from "../provider/UserProfileProvider";
 
 const { Title } = Typography;
 
@@ -31,7 +32,7 @@ const { Title } = Typography;
  * @param {boolean} props.modalVisible
  * @param {Object} props.selectedWorkout
  * @param {Function} props.handleModalClose
- * @param {Function} props.centerOnWorkout - function(workout) to center/zoom map on this workout
+ * @param {Function} props.centerOnWorkout
  */
 const WorkoutCards = ({
   isStravaWorkoutFetching,
@@ -47,12 +48,46 @@ const WorkoutCards = ({
   modalVisible,
   selectedWorkout,
   handleModalClose,
-  centerOnWorkout, // <-- new prop
+  centerOnWorkout,
   highlightedActivities,
   setHighlightedActivities,
 }) => {
   // Add local search state for filtering cards by text
   const [localSearch, setLocalSearch] = useState("");
+  const { userProfile } = useUserProfile();
+  const distanceUnit = userProfile?.distance_unit || "Imperial";
+  const distanceLabel = distanceUnit === "Imperial" ? "miles" : "km";
+  const elevationLabel = distanceUnit === "Imperial" ? "ft" : "m";
+  const convertDistance = (km) =>
+    distanceUnit === "Imperial" ? (km * 0.621371).toFixed(2) : km.toFixed(2);
+  const convertElevation = (meters) =>
+    distanceUnit === "Imperial"
+      ? (meters * 3.28084).toFixed(0)
+      : meters.toFixed(0);
+
+  // Get browser timezone
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  console.log("User's timezone:", userTimeZone);
+
+  // Helper to format UTC date string (with Z) to local time
+  const formatLocalDateTime = (utcDateStr) => {
+    if (!utcDateStr) return "N/A";
+    try {
+      // Always parse as UTC and convert to local time
+      // Remove 'Z' if present, then use Date.UTC to construct the date
+      const iso = utcDateStr.endsWith("Z")
+        ? utcDateStr.slice(0, -1)
+        : utcDateStr;
+      const [datePart, timePart] = iso.split("T");
+      const [year, month, day] = datePart.split("-").map(Number);
+      const [hour, minute, second] = timePart.split(":").map(Number);
+      const utcMillis = Date.UTC(year, month - 1, day, hour, minute, second);
+      const localDate = new Date(utcMillis);
+      return localDate.toLocaleString(undefined, { timeZone: userTimeZone });
+    } catch {
+      return utcDateStr;
+    }
+  };
 
   if (isStravaWorkoutFetching) {
     return (
@@ -172,19 +207,21 @@ const WorkoutCards = ({
               </p>
               <p>
                 <b>Start:</b>{" "}
-                {workout.start_date_local
-                  ? new Date(workout.start_date_local).toLocaleString()
+                {workout.start_date
+                  ? formatLocalDateTime(workout.start_date)
                   : "N/A"}
               </p>
               <p>
                 <b>Distance:</b>{" "}
                 {workout.distance
-                  ? `${(workout.distance / 1000).toFixed(2)} km`
+                  ? `${convertDistance(workout.distance / 1000)} ${distanceLabel}`
                   : "N/A"}
               </p>
               {workout.total_elevation_gain !== undefined && (
                 <p>
-                  <b>Elevation:</b> {workout.total_elevation_gain} m
+                  <b>Elevation:</b>{" "}
+                  {convertElevation(workout.total_elevation_gain)}{" "}
+                  {elevationLabel}
                 </p>
               )}
             </Card>

@@ -28,13 +28,23 @@ const UserProfileCard = ({
   updatingPublic,
   onNameSave,
   nameEditLoading,
+  onDistanceUnitSave,
+  distanceUnitEditLoading,
 }) => {
   const [editing, setEditing] = useState(false);
   const [nameValue, setNameValue] = useState(userProfile?.name || "");
+  const [distanceUnit, setDistanceUnit] = useState(
+    userProfile?.distance_unit || "Imperial",
+  );
+  const [editingDistanceUnit, setEditingDistanceUnit] = useState(false);
 
   useEffect(() => {
     setNameValue(userProfile?.name || "");
   }, [userProfile?.name]);
+
+  useEffect(() => {
+    setDistanceUnit(userProfile?.distance_unit || "Imperial");
+  }, [userProfile?.distance_unit]);
 
   return (
     <Card
@@ -104,6 +114,67 @@ const UserProfileCard = ({
           </div>
           <Text type="secondary">{userProfile.email || "N/A"}</Text>
           <br />
+          {/* Distance Unit Field */}
+          <div style={{ margin: "8px 0" }}>
+            <Text strong>Distance Unit: </Text>
+            {editingDistanceUnit ? (
+              <>
+                <select
+                  value={distanceUnit}
+                  onChange={(e) => setDistanceUnit(e.target.value)}
+                  disabled={distanceUnitEditLoading}
+                  style={{ marginRight: 8 }}
+                >
+                  <option value="Imperial">Imperial (Miles/Feet)</option>
+                  <option value="Metric">Metric (Kilometers/Meters)</option>
+                </select>
+                <Button
+                  size="small"
+                  type="primary"
+                  loading={distanceUnitEditLoading}
+                  onClick={async () => {
+                    if (
+                      distanceUnit &&
+                      distanceUnit !== userProfile.distance_unit
+                    ) {
+                      await onDistanceUnitSave(distanceUnit);
+                    }
+                    setEditingDistanceUnit(false);
+                  }}
+                  style={{ marginRight: 4 }}
+                >
+                  Save
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setEditingDistanceUnit(false);
+                    setDistanceUnit(userProfile.distance_unit || "Imperial");
+                  }}
+                  disabled={distanceUnitEditLoading}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Text>
+                  {userProfile.distance_unit === "Imperial"
+                    ? "Imperial (Miles/Feet)"
+                    : userProfile.distance_unit === "Metric"
+                      ? "Metric (Kilometers/Meters)"
+                      : "Imperial (Miles/Feet)"}
+                </Text>
+                <Button
+                  size="small"
+                  onClick={() => setEditingDistanceUnit(true)}
+                  style={{ marginLeft: 8 }}
+                >
+                  Edit
+                </Button>
+              </>
+            )}
+          </div>
           {userProfile.public_profile !== undefined ? (
             <>
               <Switch
@@ -262,6 +333,7 @@ const UserProfile = () => {
   const [isCallbackLoading, setIsCallbackLoading] = useState(false);
   const [callbackError, setCallbackError] = useState(null);
   const [nameEditLoading, setNameEditLoading] = useState(false);
+  const [distanceUnitEditLoading, setDistanceUnitEditLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -320,6 +392,22 @@ const UserProfile = () => {
     }
   };
 
+  // Handle distance unit save
+  const handleDistanceUnitSave = async (newUnit) => {
+    setDistanceUnitEditLoading(true);
+    try {
+      await updateUserProfileAsync({ distance_unit: newUnit });
+      message.success("Distance unit updated!");
+      if (typeof userRefetch === "function") {
+        userRefetch();
+      }
+    } catch (err) {
+      message.error("Failed to update distance unit.");
+    } finally {
+      setDistanceUnitEditLoading(false);
+    }
+  };
+
   const stage = getStage();
 
   return (
@@ -332,6 +420,8 @@ const UserProfile = () => {
           updatingPublic={updateUserProfileLoading}
           onNameSave={handleNameSave}
           nameEditLoading={nameEditLoading}
+          onDistanceUnitSave={handleDistanceUnitSave}
+          distanceUnitEditLoading={distanceUnitEditLoading}
         />
         {updateUserProfileError && (
           <Alert
