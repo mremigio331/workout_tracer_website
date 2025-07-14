@@ -47,13 +47,13 @@ const workoutTypeColor = (type) => {
     case "Racquetball":
       return "#a9a9a9"; // Dark Gray
     case "Ride":
-      return "#003399"; // Strong Blue
+      return "#006400"; // Dark Green
     case "RockClimb":
       return "#696969"; // Dim Gray
     case "RollerSki":
       return "#a0522d"; // Sienna
     case "Rowing":
-      return "#006400"; // Dark Green
+      return "#1e90ff"; // Dodger Blue (distinct from Ride)
     case "Run":
       return "#c21807"; // Strong Red
     case "Sail":
@@ -89,7 +89,7 @@ const workoutTypeColor = (type) => {
     case "VirtualRun":
       return "#c71585"; // Medium Violet Red
     case "Walk":
-      return "#6a1b9a"; // Deep Purple
+      return "#003399"; // Strong Blue (was Deep Purple)
     case "WeightTraining":
       return "#888888"; // Medium Gray
     case "Wheelchair":
